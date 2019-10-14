@@ -7,6 +7,10 @@
         public string Unit { get; set; }
     }
 
+
+    /// <summary>
+    /// Contains a propety for each channel available for use on the Dataq, channels not enabled will return a null
+    /// </summary>
     public class ReadRecord 
     {
         public ReadRecord() { }

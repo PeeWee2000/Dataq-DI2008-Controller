@@ -52,6 +52,9 @@ namespace DI2008Controller
             return Output;
         }
 
+        /// <summary>
+        /// Starts a background thread that continuously updates an internal variable that can be read via the ReadData function
+        /// </summary>
         public void StartAcquiringData()
         {
             Reader = new Thread(() =>
@@ -143,6 +146,11 @@ namespace DI2008Controller
         {
             StopRequest = true;            
         }
+
+        /// <summary>
+        /// Returns the last value(s) read from the Dataq based on which channels were enabled
+        /// </summary>
+        /// <returns></returns>
         public ReadRecord ReadData()
         {
             lock (Data)

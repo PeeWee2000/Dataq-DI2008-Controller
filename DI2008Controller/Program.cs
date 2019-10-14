@@ -17,7 +17,27 @@ namespace DI2008Controller
         public Functions Functions = new Functions();
         public Channels Channels = new Channels();
         public DeviceInfo DeviceInfo = new DeviceInfo();
-        
+        //public List<DeviceInfo> AvailableDevices { get; set; }
+
+
+        public DI2008()
+        {
+            //UsbRegDeviceList Devices = UsbDevice.AllDevices;
+            
+            //foreach (UsbDevice device in Devices)
+            //{
+            //    var FoundDevice = new DeviceInfo();
+            //    //FoundDevice.Serial = device.UsbRegistryInfo.
+
+
+            //    //AvailableDevices.Add(FoundDevice);
+            //}
+        }
+
+
+        /// <summary>
+        /// Connect to the first available Dataq -- Useful if there will only ever be 1 Dataq per PC
+        /// </summary>
         public void Connect()
         {
             AppDomain.CurrentDomain.ProcessExit += new EventHandler(OnApplicationExit);
@@ -43,6 +63,16 @@ namespace DI2008Controller
             DeviceInfo.PID = DI_2008.UsbRegistryInfo.Pid;
             DeviceInfo.VID = DI_2008.UsbRegistryInfo.Vid;
         }
+        /// <summary>
+        /// Connect a dataq based on its serial number -- Useful if there will be multiple Dataqs on a PC at one time
+        /// </summary>
+        /// <param name="SerialNumber"></param>
+        public void Connect(string SerialNumber)
+        {
+            throw new NotImplementedException();
+        }
+
+
         public void Disconnect()
         {
             DI_2008.Close(); 
