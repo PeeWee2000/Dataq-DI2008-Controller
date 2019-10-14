@@ -25,7 +25,6 @@ namespace DI2008Controller
 
         static void Main(string[] args)
         {
-
             Waef.Example.Waef();
             Console.ReadLine();
         }
@@ -87,10 +86,7 @@ namespace DI2008Controller
 
             foreach (string Command in ConfigCommands)
             {
-                string Success = InternalFunctions.Write(Command);
-                if (Success.Length == 0)
-                { throw new Exception("Device Not Responding"); }
-
+                InternalFunctions.Write(Command);
             }
         }
     }

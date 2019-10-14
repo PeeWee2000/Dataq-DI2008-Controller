@@ -20,12 +20,12 @@ namespace Waef
             Dataq.Connect();            
 
             Dataq.Channels.Analog0 = ChannelConfiguration.KTypeTC;
-            Dataq.Channels.Analog1 = ChannelConfiguration._1000mv;
-            //Dataq.Channels.Analog2 = ChannelConfiguration.STypeTC;
-            //Dataq.Channels.Analog3 = ChannelConfiguration._10mv;
-            //Dataq.Channels.Analog4 = ChannelConfiguration._500mv;
-            //Dataq.Channels.Analog5 = ChannelConfiguration._1000mv;
-            //Dataq.Channels.Analog6 = ChannelConfiguration._5v;
+            Dataq.Channels.Analog1 = ChannelConfiguration.STypeTC;
+            Dataq.Channels.Analog2 = ChannelConfiguration.STypeTC;
+            Dataq.Channels.Analog3 = ChannelConfiguration.STypeTC;
+            Dataq.Channels.Analog4 = ChannelConfiguration.STypeTC;
+            Dataq.Channels.Analog5 = ChannelConfiguration.STypeTC;
+            Dataq.Channels.Analog6 = ChannelConfiguration.STypeTC;
             //Dataq.Channels.Analog7 = ChannelConfiguration._25v;
 
             Dataq.ConfigureChannels();
