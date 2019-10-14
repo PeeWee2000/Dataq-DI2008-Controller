@@ -1,4 +1,4 @@
-The purpose of this project was to create a hardware interface that is simple from the users perspective. 
+The purpose of this project was to create a hardware interface that is simple from a developers perspective. 
 In order to accomplish this, the solution handles all binary calculations and spits out nice user friendly enums
 that allow for rapid development with the DI2008.
 
