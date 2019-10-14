@@ -21,21 +21,18 @@ namespace DI2008Controller
         public string Write(string Command)
         {
             LibUsbDotNet.Main.ErrorCode Error = LibUsbDotNet.Main.ErrorCode.Ok;
-            int BytesWritten;
-            int BytesRead;
-
             if (Command.EndsWith("\r") == true)
             {
                 Command = Command.Remove(Command.Length - 1, 1);
             }
             byte[] BytesToWrite = ASCIIEncoding.ASCII.GetBytes(Command + "\r");
-            Error = DI2008.Writer.Write(BytesToWrite, 3000, out BytesWritten);
+            Error = DI2008.Writer.Write(BytesToWrite, 3000, out _);
 
             if (Error != 0)
             { throw new Exception(Error.ToString()); }
 
             var readBuffer = new byte[1024];
-            Error = DI2008.Reader.Read(readBuffer, 3000, out BytesRead);
+            Error = DI2008.Reader.Read(readBuffer, 3000, out _);
 
             if (Error != 0)
             { throw new Exception(Error.ToString()); }
@@ -86,10 +83,13 @@ namespace DI2008Controller
                         BytePair.Add(readBuffer[i + 1]);
                         short ADCValue = BitConverter.ToInt16(BytePair.ToArray(), 0);
                         
+
+                        //This is inefficent and causes good reads to be ignored, if you need higher frequency readings this will need to be optimized
                         if(ADCValues.Count < EnabledChannels)
                         { 
                             ADCValues.Add(new Tuple<int, int>(CurrentChannel, ADCValue));
                         }
+
                         CurrentChannel++;
                         if (CurrentChannel == EnabledChannels)
                         { CurrentChannel = 0; }
@@ -125,7 +125,7 @@ namespace DI2008Controller
                             ChannelData.Value = ActualValue;
 
                             Data.GetType().GetProperty(ChannelName).SetValue(Data, ChannelData);
-                        }
+                        }                        
                     }
                 }
                 Write("stop");
@@ -146,7 +146,7 @@ namespace DI2008Controller
         public ReadRecord ReadData()
         {
             lock (Data)
-            { return Data; }           
+            { return Data; }
         }
 
         public static double GetTemperature(int ADC, ChannelConfiguration ThermocoupleType)

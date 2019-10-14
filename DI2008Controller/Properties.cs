@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace DI2008Controller
+﻿namespace DI2008Controller
 {
     public struct Channel
     {

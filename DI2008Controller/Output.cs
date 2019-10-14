@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace DI2008Controller
+﻿namespace DI2008Controller
 {
     public struct Data
     {

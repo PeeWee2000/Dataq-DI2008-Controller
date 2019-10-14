@@ -1,10 +1,6 @@
 ﻿using DI2008Controller;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Threading;
-using System.Windows.Threading;
-using System.Linq;
 using System;
+using System.Threading;
 
 namespace Waef
 {
@@ -12,7 +8,7 @@ namespace Waef
     {
         private static Thread Reader;  //Continuously grabs data
 
-        public static void Waef()
+        public static void Main()
         {
             var Dataq = new DI2008();
 
@@ -50,9 +46,11 @@ namespace Waef
                 }
             });
 
-            Thread.Sleep(500);
             Reader.Start();
-            Thread.Sleep(500);
+
+            while(InstantaneousRead.Analog0 == null)
+            { Thread.Sleep(100); }
+
 
             while (true)
             {

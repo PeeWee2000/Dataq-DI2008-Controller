@@ -1,16 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using LibUsbDotNet;
+﻿using LibUsbDotNet;
 using LibUsbDotNet.Main;
-using System.Linq;
+using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace DI2008Controller
 {
-
-
     public class DI2008
     {        
         private static UsbDevice DI_2008; 
@@ -22,15 +18,10 @@ namespace DI2008Controller
         public Channels Channels = new Channels();
         public DeviceInfo DeviceInfo = new DeviceInfo();
         
-
-        static void Main(string[] args)
-        {
-            Waef.Example.Waef();
-            Console.ReadLine();
-        }
-
         public void Connect()
         {
+            AppDomain.CurrentDomain.ProcessExit += new EventHandler(OnApplicationExit);
+
             var Devices = UsbDevice.AllDevices;
             var Finder = new UsbDeviceFinder(Devices[0].Vid, Devices[0].Pid);
             DI_2008 = UsbDevice.OpenUsbDevice(Finder);
@@ -44,7 +35,8 @@ namespace DI2008Controller
             Writer = DI_2008.OpenEndpointWriter(WriteEndpointID.Ep01);
             Reader = DI_2008.OpenEndpointReader(ReadEndpointID.Ep01);
 
-            InternalFunctions.Write("stop"); //Make sure the device wasnt left in a scan state
+            InternalFunctions.Write("stop"); //Make sure the device wasnt left in a scan state and clear all channels
+            //InternalFunctions.Write("slist 0 0");
 
             DeviceInfo.Serial = InternalFunctions.Write("info 6");
             DeviceInfo.FirmwareVersion = InternalFunctions.Write("info 2");
@@ -88,6 +80,16 @@ namespace DI2008Controller
             {
                 InternalFunctions.Write(Command);
             }
+        }
+
+        private void OnApplicationExit(object sender, EventArgs e)
+        {
+            try
+            {
+                InternalFunctions.Write("stop");
+                DI_2008.Close();
+            }
+            catch { }
         }
     }
 }
