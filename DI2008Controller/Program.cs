@@ -36,9 +36,16 @@ namespace DI2008Controller
             var Finder = new UsbDeviceFinder(Devices[0].Vid, Devices[0].Pid);
             DI_2008 = UsbDevice.OpenUsbDevice(Finder);
 
-            DI_2008.Open();
+            if (!DI_2008.IsOpen) 
+            {
+                DI_2008.Open();
+            }
+
+                                  
             Writer = DI_2008.OpenEndpointWriter(WriteEndpointID.Ep01);
             Reader = DI_2008.OpenEndpointReader(ReadEndpointID.Ep01);
+
+            InternalFunctions.Write("stop"); //Make sure the device wasnt left in a scan state
 
             DeviceInfo.Serial = InternalFunctions.Write("info 6");
             DeviceInfo.FirmwareVersion = InternalFunctions.Write("info 2");
@@ -47,7 +54,7 @@ namespace DI2008Controller
         }
         public void Disconnect()
         {
-            DI_2008.Close();
+            DI_2008.Close(); 
         }
         public void ConfigureChannels()
         {
@@ -80,7 +87,10 @@ namespace DI2008Controller
 
             foreach (string Command in ConfigCommands)
             {
-                InternalFunctions.Write(Command);
+                string Success = InternalFunctions.Write(Command);
+                if (Success.Length == 0)
+                { throw new Exception("Device Not Responding"); }
+
             }
         }
     }

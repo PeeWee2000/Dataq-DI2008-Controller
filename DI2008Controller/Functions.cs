@@ -9,7 +9,7 @@ namespace DI2008Controller
     public class Functions
     {
         Thread Reader;
-        private Output Data = new Output();
+        private ReadRecord Data = new ReadRecord();
         private bool StopRequest = false;
 
         public void SetLedColor(LEDColor Color)
@@ -20,79 +20,117 @@ namespace DI2008Controller
 
         public string Write(string Command)
         {
+            LibUsbDotNet.Main.ErrorCode Error = LibUsbDotNet.Main.ErrorCode.Ok;
+            int BytesWritten;
+            int BytesRead;
+
             if (Command.EndsWith("\r") == true)
             {
                 Command = Command.Remove(Command.Length - 1, 1);
             }
             byte[] BytesToWrite = ASCIIEncoding.ASCII.GetBytes(Command + "\r");
-            DI2008.Writer.Write(BytesToWrite, 3000, out var BytesWritten);
+            Error = DI2008.Writer.Write(BytesToWrite, 3000, out BytesWritten);
 
-            var readBuffer = new byte[64];
-            DI2008.Reader.Read(readBuffer, 3000, out var BytesRead);
+            if (Error != 0)
+            { throw new Exception(Error.ToString()); }
 
-            var Output = Encoding.ASCII.GetString(readBuffer);
-            Output = Output.Replace(Command, "");
-            Output = Output.Replace(" ", "");
-            Output = Output.Replace("\0", "");
-            Output = Output.Replace("\r", "");
+            var readBuffer = new byte[1024];
+            Error = DI2008.Reader.Read(readBuffer, 3000, out BytesRead);
+
+            if (Error != 0)
+            { throw new Exception(Error.ToString()); }
+
+            var TrimmedOutput = Encoding.ASCII.GetString(readBuffer);
+            TrimmedOutput = TrimmedOutput.Replace(Command, "");
+            TrimmedOutput = TrimmedOutput.Replace(" ", "");
+            TrimmedOutput = TrimmedOutput.Replace("\0", "");
+            TrimmedOutput = TrimmedOutput.Replace("\r", "");
+
+            string Output;
+            if (TrimmedOutput.Length == 0)
+            { Output = Encoding.ASCII.GetString(readBuffer); }
+            else { Output = TrimmedOutput; }
+            
             return Output;
         }
 
         public void StartAcquiringData()
         {
+            Write("stop");
             Write("start 0");
-
-
-            int BitsPerCycle = 0;
-
-            foreach (var EnabledChannel in DI2008.CurrentConfig)
-            {
-                BitsPerCycle += 16;
-            }
 
             Reader = new Thread(() =>
             {
                 while (StopRequest == false)
-                { 
-                    var readBuffer = new byte[64]; //Needs additional math to accomodate digital channels
-                    DI2008.Reader.Read(readBuffer, 10000, out var BytesRead);
-                    DI2008.Reader.Read(readBuffer, 10000, out var BytesRead2);
-
+                {
+                    int EnabledChannels = DI2008.CurrentConfig.Count;
+                    int CurrentChannel = 0;
+                    int BytePosition = 0;
+                    int BytesRead;
                     int i = 0;
+                    List<Tuple<int,Byte>> AllBytesRead = new List<Tuple<int, Byte>>();
+
+                        //The DI2008 appears to spit out no less than 16 bytes at a time, this creates issues when working with odd numbers of channels handled by the loops below
+                        byte[] readBuffer = new byte[16];
+                        DI2008.Reader.Read(readBuffer, 10000, out BytesRead);
+                        foreach (var Value in readBuffer)
+                        {
+
+                            AllBytesRead.Add(new Tuple<int, byte>(CurrentChannel, Value));
+                            BytePosition++;
+                            if (BytePosition == 2)
+                            {
+                                CurrentChannel++;
+                                if (CurrentChannel == EnabledChannels)
+                                { CurrentChannel = 0; }
+                                BytePosition = 0;
+                            }
+                        }
+
                     var ADCValues = new List<int>();
-                    for (i = 0; i < readBuffer.Count(); i += 2)
+                    for (int x = 0; x < EnabledChannels * 2; x += 2)
                     {
-                        short ADC = BitConverter.ToInt16(readBuffer, i);
-                        if (ADC != 0)
-                        { ADCValues.Add(ADC); }
+                        List<byte> ValuePair = new List<byte>();
+                        ValuePair.Add(AllBytesRead[x].Item2);
+                        ValuePair.Add(AllBytesRead[x + 1].Item2);
+                        short ADC = BitConverter.ToInt16(ValuePair.ToArray(), 0);
+                        ADCValues.Add(ADC);
                     }
 
 
-                    for (i =0; i < DI2008.CurrentConfig.Count; i -= -1)
-                    {
-                        double ActualValue = 0;
 
-                        var ChannelType = DI2008.CurrentConfig[i].ChannelConfiguration;
-                        var ChannelName = DI2008.CurrentConfig[i].ChannelID.ToString();
 
-                        if(ChannelType.ToString().Contains("TC"))
+                    if (ADCValues.Count == DI2008.CurrentConfig.Count)
+                    { 
+                        for (i =0; i < DI2008.CurrentConfig.Count; i -= -1)
                         {
-                            ActualValue = GetTemperature(ADCValues[i], ChannelType);
-                        }
-                        else
-                        {
-                            ActualValue = GetVoltage(ADCValues[i], ChannelType);
-                        }
+                            double ActualValue = 0;
 
-                        var ChannelData = new Data();
-                        ChannelData.ChannelConfiguration = ChannelType;
-                        ChannelData.Value = ActualValue;
+                            var ChannelType = DI2008.CurrentConfig[i].ChannelConfiguration;
+                            var ChannelName = DI2008.CurrentConfig[i].ChannelID.ToString();
+                            var ChannelData = new Data();
 
-                        Data.GetType().GetProperty(ChannelName).SetValue(Data, ChannelData);
+                            if (ChannelType.ToString().Contains("TC"))
+                            {
+                                ActualValue = GetTemperature(ADCValues[i], ChannelType);
+                                ChannelData.Unit = "°C";
+                            }
+                            else if ((int)ChannelType <= 12)
+                            {
+                                ActualValue = GetVoltage(ADCValues[i], ChannelType);
+                                ChannelData.Unit = (int)ChannelType <= 8 ? "mV" : "V";
+                            }
+                            else
+                            { throw new NotImplementedException(); } //Add logic for reading counter, frequency digital inputs here
+                            
+                            ChannelData.ChannelConfiguration = ChannelType;
+                            ChannelData.Value = ActualValue;
+
+                            Data.GetType().GetProperty(ChannelName).SetValue(Data, ChannelData);
+                        }
                     }
-
-
                 }
+                Write("stop");
             });
 
             Reader.Start();
@@ -105,18 +143,13 @@ namespace DI2008Controller
 
         public void StopAcquiringData()
         {
-            StopRequest = true; 
-            Write("stop");
+            StopRequest = true;            
         }
-        public Output ReadData()
+        public ReadRecord ReadData()
         {
             lock (Data)
             { return Data; }           
         }
-
-
-
-
 
         public static double GetTemperature(int ADC, ChannelConfiguration ThermocoupleType)
         {

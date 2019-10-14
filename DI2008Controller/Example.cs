@@ -12,11 +12,11 @@ namespace Waef
     {
         private static Thread Reader;  //Continuously grabs data
 
-
         public static void Waef()
         {
             var Dataq = new DI2008();
 
+            //try { Dataq.Disconnect(); } catch { }
             Dataq.Connect();            
 
             Dataq.Channels.Analog0 = ChannelConfiguration.KTypeTC;
@@ -32,10 +32,9 @@ namespace Waef
             Dataq.Functions.SetLedColor(LEDColor.Magenta);
             Dataq.Functions.StartAcquiringData();
 
-            var waef = Dataq;
 
-            var DataList = new List<Output>();
-            Output InstantaneousRead = new Output();
+            //var DataList = new List<Output>();
+            ReadRecord InstantaneousRead = new ReadRecord();
 
             Reader = new Thread(() =>
             {
@@ -43,7 +42,7 @@ namespace Waef
                 { 
                     var Data = Dataq.Functions.ReadData();
 
-                    lock (DataList)
+                    lock (Dataq)
                     {
                         InstantaneousRead = Data;
                         //DataList.Add(Data);
@@ -51,26 +50,37 @@ namespace Waef
                 }
             });
 
-            Thread.Sleep(5000);
+            Thread.Sleep(500);
             Reader.Start();
-            Thread.Sleep(5000);
+            Thread.Sleep(500);
 
             while (true)
             {
-               Console.WriteLine(Math.Round(InstantaneousRead.Analog0.Value.Value, 2) + InstantaneousRead.Analog0.Value.Unit);
-                Console.WriteLine(Math.Round(InstantaneousRead.Analog1.Value.Value, 2));
+                //foreach (var Property in InstantaneousRead.GetType().GetProperties())
+                //{
+                //    string Unit;
+                //    double Value;
+
+                //    var ChannelData = Property.GetType().GetProperty("Value");
+                //    Value = (double)ChannelData.GetType().GetProperty("Value").GetValue(ChannelData);
+                //    Unit = (string)ChannelData.GetType().GetProperty("Unit").GetValue(ChannelData);
+
+                //}
+
+                try
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine(Math.Round(InstantaneousRead.Analog0.Value.Value, 2));
+                    Console.ForegroundColor = ConsoleColor.Blue;
+                    Console.WriteLine(Math.Round(InstantaneousRead.Analog1.Value.Value, 2));
+                    //Console.ForegroundColor = ConsoleColor.DarkGreen;
+                    //Console.WriteLine(Math.Round(InstantaneousRead.Analog2.Value.Value, 2));
+                }
+                catch { }
+                //Console.WriteLine(Math.Round(InstantaneousRead.Analog0.Value.Value, 2) + ", " + InstantaneousRead.Analog1.Value.Value + ", " + InstantaneousRead.Analog2.Value.Value);
+
                 Thread.Sleep(100);
             }
-
-
-
-
-            var Waef2 = Dataq.DeviceInfo.FirmwareVersion;
-
-            Dataq.Functions.Write("stop");
-            
-
         }
-
     }
 }

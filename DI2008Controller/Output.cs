@@ -13,9 +13,9 @@ namespace DI2008Controller
         public string Unit { get; set; }
     }
 
-    public class Output 
+    public class ReadRecord 
     {
-        public Output() { }
+        public ReadRecord() { }
 
         public  Data? Analog0 { get; set; }
         public  Data? Analog1 { get; set; }
