@@ -7,6 +7,8 @@ using System.Text.RegularExpressions;
 
 namespace DI2008Controller
 {
+
+
     public class DI2008
     {        
         private static UsbDevice DI_2008; 
@@ -19,7 +21,10 @@ namespace DI2008Controller
         public DeviceInfo DeviceInfo = new DeviceInfo();
         //public List<DeviceInfo> AvailableDevices { get; set; }
 
-
+        /// <summary>
+        /// This class is designed to conceptually represent a physical DI2008 as closely as possible. It can be connected, disconnected,
+        /// configured per channel, set the led color and spit data out fast AF
+        /// </summary>
         public DI2008()
         {
             //UsbRegDeviceList Devices = UsbDevice.AllDevices;
@@ -81,6 +86,7 @@ namespace DI2008Controller
         {
             var ConfigCommands = new List<string>();
             int ScanListPosition = 0;
+            int DigitalChannelCommand = 0;
 
             foreach (PropertyInfo Property in Channels.GetType().GetProperties())
             {
@@ -91,10 +97,7 @@ namespace DI2008Controller
                     var ChannelType = Regex.Match(Property.Name, @"Analog").Value == "Analog" ? "Analog" : "Digital";
                     var Channel = Regex.Match(Property.Name, @"\d+").Value;
                     int ChannelID = Channel.Length > 0 ? Convert.ToInt32(Channel) : 0;
-                    ChannelID = ChannelType == "Digital" ? ChannelID + 8 : ChannelID;
-
-                    var Command = Functions.GetScanListCommand(ScanListPosition, ChannelID, Configuration);
-                    ConfigCommands.Add(Command);
+                    //ChannelID = ChannelType == "Digital" ? ChannelID + 8 : ChannelID;
 
                     Channel ChannelConfig = new Channel();
                     ChannelConfig.ChannelConfiguration = Configuration;
@@ -102,9 +105,23 @@ namespace DI2008Controller
 
                     CurrentConfig.Add(ChannelConfig);
 
-                    ScanListPosition -= -1;
+                    
+
+                    if (ChannelType == "Analog")
+                    {
+                        var Command = Functions.GetAnalogChannelCommand(ScanListPosition, ChannelID, Configuration);
+                        ConfigCommands.Add(Command);
+                        ScanListPosition -= -1;
+                    }
+                    else if (ChannelType == "Digital")
+                    {
+                        DigitalChannelCommand += Functions.GetDigitalIOCommand(ChannelID, Configuration);
+                    }
+
+                    
                 }
             }
+            ConfigCommands.Add("endo " + DigitalChannelCommand);
 
             foreach (string Command in ConfigCommands)
             {

@@ -12,6 +12,9 @@ namespace Waef
         {
             var Dataq = new DI2008();
 
+            var Test = Dataq.Functions.GetDigitalChannelStates(20);
+
+
             Dataq.Connect();            
 
             Dataq.Channels.Analog0 = ChannelConfiguration.KTypeTC;
@@ -23,9 +26,25 @@ namespace Waef
             Dataq.Channels.Analog6 = ChannelConfiguration.STypeTC;
             //Dataq.Channels.Analog7 = ChannelConfiguration._25v;
 
+            Dataq.Channels.Digital0 = ChannelConfiguration.DigitalOutput;
+            Dataq.Channels.Digital1 = ChannelConfiguration.DigitalOutput;
+            Dataq.Channels.Digital2 = ChannelConfiguration.DigitalOutput;
+
+
+
+
             Dataq.ConfigureChannels();
             Dataq.Functions.SetLedColor(LEDColor.Magenta);
+
+            var Waef = Dataq.Functions.Write("stop");
+            Waef = Dataq.Functions.Write("din");
+            
+            
+            
             Dataq.Functions.StartAcquiringData();
+
+
+            
 
 
             ReadRecord InstantaneousRead = new ReadRecord();

@@ -33,7 +33,8 @@
         Record = 22,
         Rate = 23,
         Count = 24,
-        DigitalIO = 25
+        DigitalInput = 25,
+        DigitalOutput = 26
     }
     public enum ChannelID
     {

@@ -31,8 +31,5 @@
         public  string FirmwareVersion { get; set; }
         public  int PID { get; set; }
         public  int VID { get; set; }
-
-    }
-
-    
+    }    
 }

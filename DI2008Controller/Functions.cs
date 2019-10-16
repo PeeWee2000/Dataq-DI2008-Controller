@@ -12,6 +12,7 @@ namespace DI2008Controller
         private ReadRecord Data = new ReadRecord();
         private bool StopRequest = false;
 
+
         public void SetLedColor(LEDColor Color)
         {
             string Command = "led " + (int)Color;
@@ -64,7 +65,7 @@ namespace DI2008Controller
                 DI2008.Writer.Write(BytesToWrite, 3000, out var BytesWritten);
                 Thread.Sleep(500);
 
-                int EnabledChannels = DI2008.CurrentConfig.Count;
+                int EnabledAnalogChannels = DI2008.CurrentConfig.Select(x => x.ChannelConfiguration).Where(x => (int)x <= 20).Count();
                 int CurrentChannel = 0;
                 int BytesRead;
                 int i = 0;
@@ -88,22 +89,25 @@ namespace DI2008Controller
                         
 
                         //This is inefficent and causes good reads to be ignored, if you need higher frequency readings this will need to be optimized
-                        if(ADCValues.Count < EnabledChannels)
+                        if(ADCValues.Count < EnabledAnalogChannels)
                         { 
                             ADCValues.Add(new Tuple<int, int>(CurrentChannel, ADCValue));
                         }
 
                         CurrentChannel++;
-                        if (CurrentChannel == EnabledChannels)
-                        { CurrentChannel = 0; }
-                        
+                        if (CurrentChannel == EnabledAnalogChannels) //If all analog channels have been read, handle the digital readout then start over
+                        {
+                            ADCValues.Add(new Tuple<int, int>((EnabledAnalogChannels + 1), BytePair[1]));
+                            CurrentChannel = 0;
+                        }
+
                     }
 
                     ADCValues = ADCValues.OrderBy(z => z.Item1).ToList();
 
-                    if (ADCValues.Count == DI2008.CurrentConfig.Count)
+                    if (ADCValues.Count == EnabledAnalogChannels + 1) //+1 is for the Digital Channel byte
                     { 
-                        for (i =0; i < DI2008.CurrentConfig.Count; i -= -1)
+                        for (i =0; i < EnabledAnalogChannels; i -= -1)
                         {
                             double ActualValue = 0;
 
@@ -121,6 +125,8 @@ namespace DI2008Controller
                                 ActualValue = GetVoltage(ADCValues[i].Item2, ChannelType);
                                 ChannelData.Unit = (int)ChannelType <= 8 ? "mV" : "V";
                             }
+                            else if ((int)ChannelType >= 25)
+                            { }
                             else
                             { throw new NotImplementedException(); } //Add logic for reading counter, frequency digital inputs here
                             
@@ -128,7 +134,19 @@ namespace DI2008Controller
                             ChannelData.Value = ActualValue;
 
                             Data.GetType().GetProperty(ChannelName).SetValue(Data, ChannelData);
-                        }                        
+                        }
+
+                        int DigitalStatusByte = ADCValues[EnabledAnalogChannels].Item2;
+                        if (DigitalStatusByte <= 128 && DigitalStatusByte >= 0)
+                        { 
+                            var DigitalReadings = GetDigitalChannelStates(DigitalStatusByte);
+                            foreach (var ChannelState in DigitalReadings)
+                            {
+                                var State = ChannelState.Item2 == true ? DigtitalState.High : DigtitalState.Low;
+
+                                Data.GetType().GetProperty("Digital" + ChannelState.Item1).SetValue(Data, State);
+                            }
+                        }
                     }
                 }
                 Write("stop");
@@ -207,7 +225,7 @@ namespace DI2008Controller
         }
 
         //Binary string builder function based on the table on page 8 of the DI-2008 documentation
-        public static string GetScanListCommand(int ListPosition, int ChannelID, ChannelConfiguration ChannelConfiguration)
+        public static string GetAnalogChannelCommand(int ListPosition, int ChannelID, ChannelConfiguration ChannelConfiguration)
         {
             int Config = (int)ChannelConfiguration;
 
@@ -236,7 +254,46 @@ namespace DI2008Controller
             int Settings = Convert.ToInt32((Mode + Range + Scale + Channel), 2);
             Command = Command + Settings;
 
+            if ((int)ChannelConfiguration > 20)
+            { Command = ""; }
+
             return Command;
+        }
+
+
+        public static int GetDigitalIOCommand(int Channel, ChannelConfiguration ChannelConfiguration)
+        {
+            Channel += 1;
+            int Command = 0;
+            if (ChannelConfiguration == ChannelConfiguration.DigitalOutput && (int)ChannelConfiguration >= 25)
+            {
+                Command = 1;
+                for (int i = 1; i < Channel; i++)
+                { Command *= 2; }
+           }
+
+
+            return Command;
+        }
+
+
+
+        public  List<Tuple<int, bool>> GetDigitalChannelStates(int State)
+        {
+            int DigitalChannels = 7;
+            int TotalBits = (int)Math.Pow(2, DigitalChannels) - 1;
+            List<Tuple<int, bool>> ChannelStates = new List<Tuple<int, bool>>();
+            int BitMultiplier = 1;
+
+            for (int i = 0; i < DigitalChannels; i++)
+            {
+                bool Status = ((Convert.ToByte(State) & BitMultiplier) == 0) ? false : true;
+                var ChannelState = new Tuple<int, bool>(i, Status);
+                ChannelStates.Add(ChannelState);
+                BitMultiplier *= 2;
+            }
+
+            return ChannelStates;
         }
     }
 }
