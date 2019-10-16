@@ -12,40 +12,23 @@ namespace DI2008Controller
 
     public class DI2008
     {        
-        private static UsbDevice DI_2008; 
+        static UsbDevice DI_2008; 
         public static UsbEndpointWriter Writer;
         public static UsbEndpointReader Reader;        
         public static List<Channel> CurrentConfig = new List<Channel>();
-        public static int EnabledAnalogChannels = CurrentConfig.Select(x => x.ChannelConfiguration).Where(x => (int)x <= 20).Count();
+        public static int EnabledAnalogChannels;
         public static Functions InternalFunctions = new Functions();
-        public Functions Functions = new Functions();
+        public  Functions Functions = new Functions();
         public Channels Channels = new Channels();
         public DeviceInfo DeviceInfo = new DeviceInfo();
         //public List<DeviceInfo> AvailableDevices { get; set; }
 
         /// <summary>
         /// This class is designed to conceptually represent a physical DI2008 as closely as possible. It can be connected, disconnected,
-        /// configured per channel, set the led color and spit data out fast AF
+        /// configured per channel, set the led color and spit data out fast AF.
+        /// By default the first found DI2008 will automatically be connected to.
         /// </summary>
         public DI2008()
-        {
-            //UsbRegDeviceList Devices = UsbDevice.AllDevices;
-            
-            //foreach (UsbDevice device in Devices)
-            //{
-            //    var FoundDevice = new DeviceInfo();
-            //    //FoundDevice.Serial = device.UsbRegistryInfo.
-
-
-            //    //AvailableDevices.Add(FoundDevice);
-            //}
-        }
-
-
-        /// <summary>
-        /// Connect to the first available Dataq -- Useful if there will only ever be 1 Dataq per PC
-        /// </summary>
-        public void Connect()
         {
             AppDomain.CurrentDomain.ProcessExit += new EventHandler(OnApplicationExit);
 
@@ -53,28 +36,30 @@ namespace DI2008Controller
             var Finder = new UsbDeviceFinder(Devices[0].Vid, Devices[0].Pid);
             DI_2008 = UsbDevice.OpenUsbDevice(Finder);
 
-            if (!DI_2008.IsOpen) 
+            if (!DI_2008.IsOpen)
             {
                 DI_2008.Open();
             }
 
-                                  
+
             Writer = DI_2008.OpenEndpointWriter(WriteEndpointID.Ep01);
             Reader = DI_2008.OpenEndpointReader(ReadEndpointID.Ep01);
 
-            InternalFunctions.Write("stop"); //Make sure the device wasnt left in a scan state and clear all channels
+            //InternalFunctions.Write("stop"); //Make sure the device wasnt left in a scan state and clear all channels
             //InternalFunctions.Write("slist 0 0");
 
+            //DeviceInfo.Serial = Functions.Write("info 6");
             DeviceInfo.Serial = InternalFunctions.Write("info 6");
             DeviceInfo.FirmwareVersion = InternalFunctions.Write("info 2");
             DeviceInfo.PID = DI_2008.UsbRegistryInfo.Pid;
             DeviceInfo.VID = DI_2008.UsbRegistryInfo.Vid;
         }
+
         /// <summary>
         /// Connect a dataq based on its serial number -- Useful if there will be multiple Dataqs on a PC at one time
         /// </summary>
         /// <param name="SerialNumber"></param>
-        public void Connect(string SerialNumber)
+        public DI2008(string SerialNumber)
         {
             throw new NotImplementedException();
         }
@@ -111,13 +96,13 @@ namespace DI2008Controller
 
                     if (ChannelType == "Analog")
                     {
-                        var Command = Functions.GetAnalogChannelCommand(ScanListPosition, ChannelID, Configuration);
+                        var Command = Calculations.GetAnalogChannelCommand(ScanListPosition, ChannelID, Configuration);
                         ConfigCommands.Add(Command);
                         ScanListPosition -= -1;
                     }
                     else if (ChannelType == "Digital")
                     {
-                        DigitalChannelCommand += Functions.GetDigitalIOCommand(ChannelID, Configuration);
+                        DigitalChannelCommand += Calculations.GetDigitalIOCommand(ChannelID, Configuration);
                     }
 
                     
@@ -129,6 +114,7 @@ namespace DI2008Controller
             {
                 InternalFunctions.Write(Command);
             }
+            EnabledAnalogChannels = CurrentConfig.Select(x => x.ChannelConfiguration).Where(x => (int)x <= 20).Count();
         }
 
         private void OnApplicationExit(object sender, EventArgs e)

@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace DI2008Controller
 {
-    public static class Calculations
+    class Calculations
     {
         public static int CurrentChannel = 0;
         public static List<Tuple<int, int>> ConvertToADCValues(byte[] RawData)

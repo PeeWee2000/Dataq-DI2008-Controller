@@ -12,10 +12,7 @@ namespace Waef
         {
             var Dataq = new DI2008();
 
-            var Test = Dataq.Functions.GetDigitalChannelStates(20);
-
-
-            Dataq.Connect();            
+            //Dataq.Connect();            
 
             Dataq.Channels.Analog0 = ChannelConfiguration.KTypeTC;
             Dataq.Channels.Analog1 = ChannelConfiguration.STypeTC;

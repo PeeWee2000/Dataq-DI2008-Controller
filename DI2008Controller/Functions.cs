@@ -54,13 +54,14 @@ namespace DI2008Controller
             return Output;
         }
 
-        private static void WriteBytes(byte[] BytesToWrite)
+        void WriteBytes(byte[] BytesToWrite)
         {
             var Error = DI2008.Writer.Write(BytesToWrite, 3000, out _);
             if (Error != 0)
             { throw new Exception(Error.ToString()); }
+            Thread.Sleep(100);
         }
-        private static void WriteASCII(string ASCII)
+        void WriteASCII(string ASCII)
         {
             if (ASCII.Contains("\r") == true)
             { ASCII.Replace("\r", ""); }
@@ -68,12 +69,18 @@ namespace DI2008Controller
             byte[] BytesToWrite = ASCIIEncoding.ASCII.GetBytes(ASCII + "\r");
             WriteBytes(BytesToWrite);
         }
-        private static byte[] ReadBytes()
+        byte[] ReadBytes()
         {
-            byte[] BytesRead = new byte[16];
-            var Error = DI2008.Reader.Read(BytesRead, 3000, out _);
+            byte[] BytesRead = new byte[128];
+
+            var Error = DI2008.Reader.Read(BytesRead, 3000, out _);            
             if (Error != 0)
-            { throw new Exception(Error.ToString()); }
+            {
+                throw new Exception(Error.ToString());
+            }
+
+            BytesRead = BytesRead.Take(16).ToArray();
+
             return BytesRead;
         }
 
