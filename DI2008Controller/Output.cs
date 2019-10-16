@@ -36,6 +36,6 @@
         public DigtitalState? Digital4 { get; set; }
         public DigtitalState? Digital5 { get; set; }
         public DigtitalState? Digital6 { get; set; }
-
+        public int DigitalStates { get; set; }
     }
 }

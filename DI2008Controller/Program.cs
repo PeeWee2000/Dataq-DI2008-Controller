@@ -2,6 +2,7 @@
 using LibUsbDotNet.Main;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
@@ -13,8 +14,9 @@ namespace DI2008Controller
     {        
         private static UsbDevice DI_2008; 
         public static UsbEndpointWriter Writer;
-        public static UsbEndpointReader Reader;
+        public static UsbEndpointReader Reader;        
         public static List<Channel> CurrentConfig = new List<Channel>();
+        public static int EnabledAnalogChannels = CurrentConfig.Select(x => x.ChannelConfiguration).Where(x => (int)x <= 20).Count();
         public static Functions InternalFunctions = new Functions();
         public Functions Functions = new Functions();
         public Channels Channels = new Channels();
@@ -121,7 +123,7 @@ namespace DI2008Controller
                     
                 }
             }
-            ConfigCommands.Add("endo " + DigitalChannelCommand);
+            //ConfigCommands.Add("endo " + DigitalChannelCommand);
 
             foreach (string Command in ConfigCommands)
             {
