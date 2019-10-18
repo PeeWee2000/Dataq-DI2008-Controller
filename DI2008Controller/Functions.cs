@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace DI2008Controller
@@ -9,6 +10,7 @@ namespace DI2008Controller
     public class Functions
     {
         Thread Reader;
+        //Thread Writer;
         private ReadRecord Data = new ReadRecord();
         private bool StopRequest = false;
 
@@ -63,25 +65,33 @@ namespace DI2008Controller
         }
         void WriteASCII(string ASCII)
         {
-            if (ASCII.Contains("\r") == true)
-            { ASCII.Replace("\r", ""); }
-
+            ASCII.Replace("\r", ""); 
             byte[] BytesToWrite = ASCIIEncoding.ASCII.GetBytes(ASCII + "\r");
             WriteBytes(BytesToWrite);
         }
         byte[] ReadBytes()
         {
-            byte[] BytesRead = new byte[128];
+            int ByteCount;
+            byte[] Buffer = new byte[128];
 
-            var Error = DI2008.Reader.Read(BytesRead, 3000, out _);            
+            var Error = DI2008.Reader.Read(Buffer, 3000, out ByteCount);            
             if (Error != 0)
             {
                 throw new Exception(Error.ToString());
             }
 
-            BytesRead = BytesRead.Take(16).ToArray();
 
-            return BytesRead;
+            if (Encoding.ASCII.GetString(Buffer).ToString().Contains("stop 01") == true)
+            {
+                Thread.Sleep(1000);
+                WriteASCII("start");
+                DI2008.Reader.Read(Buffer, 3000, out ByteCount);
+                DI2008.Reader.Read(Buffer, 3000, out ByteCount);
+            }
+
+            Buffer = Buffer.Take(ByteCount).ToArray();
+
+            return Buffer;
         }
 
         /// <summary>
@@ -89,24 +99,45 @@ namespace DI2008Controller
         /// </summary>
         public void StartAcquiringData()
         {
+            //Writer = new Thread(()
+            //    =>
+            //{
+            //    while (StopRequest == false)
+            //    {
+            //        Thread.Sleep(1000);
+            //        WriteASCII("din");
+            //    }
+            //});
+
             Reader = new Thread(() =>
             {
                 //Need to manually write the start command because capturing the first byte is important for synchronization
                 WriteASCII("start 0");
 
-                byte[] readBuffer = new byte[16];
 
                 while (StopRequest == false)
                 {
-                    readBuffer = ReadBytes();
+                    byte[] readBuffer = ReadBytes();
+                    string Value = Encoding.ASCII.GetString(readBuffer);
+                    List<Tuple<int, int>> ADCValues = new List<Tuple<int, int>>();
 
-                    var ADCValues = Calculations.ConvertToADCValues(readBuffer);
+                    if (Value.Contains("din ")) //Sometimes the dataq spits out a random digital read, rather than ignoring it this makes use of it
+                    {
+                        string DinNumber = Regex.Match(Value, @"\d+").Value;
+                        int Status = Convert.ToInt32(DinNumber);
+                        WriteDigitalValues(Status);
 
-                    if (ADCValues.Count == DI2008.EnabledAnalogChannels + 1) //+1 is for the Digital Channel bytes
+                    }
+                    else if (readBuffer.Count() > 15) //Errors or non-data reads are always less than 16 bytes
+                    { ADCValues = Calculations.ConvertToADCValues(readBuffer); }
+
+                    
+
+                    if (ADCValues.Count == DI2008.EnabledAnalogChannels + 1) //+1 is for the Digital Channel readout
                     {
                         WriteAnalogValues(ADCValues);
 
-                        int DigitalStatusByte = ADCValues[DI2008.EnabledAnalogChannels].Item2;
+                        int DigitalStatusByte = ADCValues[DI2008.EnabledAnalogChannels ].Item2;
                         if (DigitalStatusByte <= 128 && DigitalStatusByte >= 0)
                         {
                             WriteDigitalValues(DigitalStatusByte);
@@ -117,6 +148,7 @@ namespace DI2008Controller
             });
 
             Reader.Start();
+            //Writer.Start();
         }
 
 
@@ -159,7 +191,7 @@ namespace DI2008Controller
             var DigitalReadings = Calculations.GetDigitalChannelStates(DigitalStatusByte);
             foreach (var ChannelState in DigitalReadings)
             {
-                var State = ChannelState.Item2 == true ? DigtitalState.High : DigtitalState.Low;
+                var State = ChannelState.Item2 == false ? DigtitalState.High : DigtitalState.Low;
 
                 Data.GetType().GetProperty("Digital" + ChannelState.Item1).SetValue(Data, State);
             }

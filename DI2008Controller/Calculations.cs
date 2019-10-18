@@ -9,8 +9,10 @@ namespace DI2008Controller
         public static int CurrentChannel = 0;
         public static List<Tuple<int, int>> ConvertToADCValues(byte[] RawData)
         {
+            int TimesToLoop = RawData.Count();
+            bool AllChannelsRead = false;
             var ADCValues = new List<Tuple<int, int>>();
-            for (int i = 0; i < RawData.Count(); i += 2)
+            for (int i = 0; i < TimesToLoop; i += 2)
             {
                 byte[] BytePair = new byte[2];
                 BytePair[0] = RawData[i];
@@ -19,17 +21,17 @@ namespace DI2008Controller
 
 
                 //This is inefficent and causes good reads to be ignored, if you need higher frequency readings this will need to be optimized
-                if (ADCValues.Count < DI2008.EnabledAnalogChannels)
+                if (ADCValues.Count <= DI2008.EnabledAnalogChannels && AllChannelsRead == false)
                 {
-                    ADCValues.Add(new Tuple<int, int>(CurrentChannel, ADCValue));
+                    ADCValues.Add(new Tuple<int, int>(CurrentChannel, ADCValue));                   
+                }
+                if (ADCValues.Count == DI2008.EnabledAnalogChannels && AllChannelsRead == false) //If all analog channels have been read, handle the digital readout then start over
+                {
+                        ADCValues.Add(new Tuple<int, int>((DI2008.EnabledAnalogChannels + 1), RawData[i + 3]));
+                        AllChannelsRead = true;
                 }
 
-                CurrentChannel++;
-                if (CurrentChannel == DI2008.EnabledAnalogChannels) //If all analog channels have been read, handle the digital readout then start over
-                {
-                    ADCValues.Add(new Tuple<int, int>((DI2008.EnabledAnalogChannels + 1), BytePair[1]));
-                    CurrentChannel = 0;
-                }
+                CurrentChannel = CurrentChannel == DI2008.EnabledAnalogChannels ? 0 : CurrentChannel + 1;
 
             }
 
@@ -98,7 +100,7 @@ namespace DI2008Controller
 
             string Command = "slist " + ListPosition.ToString() + " ";
 
-            string Mode = Config >= 13 && Config <= 20 ? "1" : "0";
+            string Mode = Config >= 13 && Config <= 20 ? "1" : "0"; 
             string Range = Config >= 7 && Config <= 12 ? "1" : "0";
 
             string Scale = "";

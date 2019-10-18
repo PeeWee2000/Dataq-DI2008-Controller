@@ -7,6 +7,8 @@ namespace Waef
     class Example
     {
         private static Thread Reader;  //Continuously grabs data
+        private static Thread ColorChanger;  //Continuously changes the led color
+
 
         public static void Main()
         {
@@ -16,15 +18,15 @@ namespace Waef
 
             Dataq.Channels.Analog0 = ChannelConfiguration.KTypeTC;
             Dataq.Channels.Analog1 = ChannelConfiguration.STypeTC;
-            Dataq.Channels.Analog2 = ChannelConfiguration.STypeTC;
-            Dataq.Channels.Analog3 = ChannelConfiguration.STypeTC;
-            Dataq.Channels.Analog4 = ChannelConfiguration.STypeTC;
-            Dataq.Channels.Analog5 = ChannelConfiguration.STypeTC;
-            Dataq.Channels.Analog6 = ChannelConfiguration.STypeTC;
+            //Dataq.Channels.Analog2 = ChannelConfiguration.STypeTC;
+            //Dataq.Channels.Analog3 = ChannelConfiguration.STypeTC;
+            //Dataq.Channels.Analog4 = ChannelConfiguration.STypeTC;
+            //Dataq.Channels.Analog5 = ChannelConfiguration.STypeTC;
+            //Dataq.Channels.Analog6 = ChannelConfiguration.STypeTC;
             //Dataq.Channels.Analog7 = ChannelConfiguration._25v;
 
-            //Dataq.Channels.Digital0 = ChannelConfiguration.DigitalOutput;
-            //Dataq.Channels.Digital1 = ChannelConfiguration.DigitalOutput;
+            Dataq.Channels.Digital0 = ChannelConfiguration.DigitalInput;
+            Dataq.Channels.Digital1 = ChannelConfiguration.DigitalOutput;
             //Dataq.Channels.Digital2 = ChannelConfiguration.DigitalOutput;
 
 
@@ -61,7 +63,28 @@ namespace Waef
 
             Reader.Start();
 
-            while(InstantaneousRead.Analog0 == null) 
+
+
+            ColorChanger = new Thread(() =>
+            {
+                while (true)
+                {
+                    foreach (LEDColor color in (LEDColor[])Enum.GetValues(typeof(LEDColor)))
+                    {
+                        Thread.Sleep(1000);
+                    
+                        lock (Dataq)
+                        {
+                            Dataq.Functions.SetLedColor(color);
+                        }
+                    }
+                }
+            });
+
+            ColorChanger.Start();
+
+
+            while (InstantaneousRead.Analog0 == null) 
             { Thread.Sleep(100); }
 
 
@@ -75,6 +98,12 @@ namespace Waef
 
                     Console.ForegroundColor = ConsoleColor.Blue;
                     Console.WriteLine(InstantaneousRead.DigitalStates);
+
+
+                    Thread.Sleep(100);
+
+
+
                 }
                 catch { }
                 Thread.Sleep(100);

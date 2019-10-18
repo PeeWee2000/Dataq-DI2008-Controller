@@ -45,7 +45,8 @@ namespace DI2008Controller
             Writer = DI_2008.OpenEndpointWriter(WriteEndpointID.Ep01);
             Reader = DI_2008.OpenEndpointReader(ReadEndpointID.Ep01);
 
-            //InternalFunctions.Write("stop"); //Make sure the device wasnt left in a scan state and clear all channels
+            InternalFunctions.Write("stop"); //Make sure the device wasnt left in a scan state and clear all channels
+            InternalFunctions.Write("ps 0");
             //InternalFunctions.Write("slist 0 0");
 
             //DeviceInfo.Serial = Functions.Write("info 6");
@@ -104,11 +105,10 @@ namespace DI2008Controller
                     {
                         DigitalChannelCommand += Calculations.GetDigitalIOCommand(ChannelID, Configuration);
                     }
-
-                    
                 }
             }
-            //ConfigCommands.Add("endo " + DigitalChannelCommand);
+            ConfigCommands.Add("slist " + ScanListPosition + " 8");
+            ConfigCommands.Insert(0, "endo " + DigitalChannelCommand);
 
             foreach (string Command in ConfigCommands)
             {
