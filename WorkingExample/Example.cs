@@ -81,7 +81,7 @@ namespace Waef
                 }
             });
 
-            ColorChanger.Start();
+            //ColorChanger.Start();
 
 
             while (InstantaneousRead.Analog0 == null) 

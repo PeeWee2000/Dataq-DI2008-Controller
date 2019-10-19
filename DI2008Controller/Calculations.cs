@@ -6,34 +6,45 @@ namespace DI2008Controller
 {
     class Calculations
     {
+        public static int FirstChannel = 0;
         public static int CurrentChannel = 0;
+        public static int LastChannel = 0;
+
         public static List<Tuple<int, int>> ConvertToADCValues(byte[] RawData)
         {
+            
+
+            FirstChannel = CurrentChannel;
             int TimesToLoop = RawData.Count();
-            bool AllChannelsRead = false;
             var ADCValues = new List<Tuple<int, int>>();
-            for (int i = 0; i < TimesToLoop; i += 2)
+            int i = 0;
+            if (FirstChannel == 2) { i = 2; }
+            for (i = 0; i < TimesToLoop; i += 2)
             {
-                byte[] BytePair = new byte[2];
-                BytePair[0] = RawData[i];
-                BytePair[1] = RawData[i + 1];
-                short ADCValue = BitConverter.ToInt16(BytePair, 0);
+                
 
 
-                //This is inefficent and causes good reads to be ignored, if you need higher frequency readings this will need to be optimized
-                if (ADCValues.Count <= DI2008.EnabledAnalogChannels && AllChannelsRead == false)
-                {
-                    ADCValues.Add(new Tuple<int, int>(CurrentChannel, ADCValue));                   
+                //This is inefficent and causes good reads to be ignored when there are less than 7 channels enabled, if you need higher frequency readings this will need to be optimized
+                if (ADCValues.Count <= DI2008.EnabledAnalogChannels)
+                { 
+                    if (CurrentChannel < DI2008.EnabledAnalogChannels)
+                    {
+                        byte[] BytePair = new byte[2];
+                        BytePair[0] = RawData[i];
+                        BytePair[1] = RawData[i + 1];
+                        short ADCValue = BitConverter.ToInt16(BytePair, 0);
+                        ADCValues.Add(new Tuple<int, int>(CurrentChannel, ADCValue));                   
+                    }
+                    if (CurrentChannel == DI2008.EnabledAnalogChannels) //If all analog channels have been read, handle the digital readout then start over
+                    {
+                            ADCValues.Add(new Tuple<int, int>((DI2008.EnabledAnalogChannels), RawData[i + 1]));
+                    }
                 }
-                if (ADCValues.Count == DI2008.EnabledAnalogChannels && AllChannelsRead == false) //If all analog channels have been read, handle the digital readout then start over
-                {
-                        ADCValues.Add(new Tuple<int, int>((DI2008.EnabledAnalogChannels + 1), RawData[i + 3]));
-                        AllChannelsRead = true;
-                }
 
-                CurrentChannel = CurrentChannel == DI2008.EnabledAnalogChannels ? 0 : CurrentChannel + 1;
+                CurrentChannel = CurrentChannel == DI2008.EnabledAnalogChannels  ? 0 : CurrentChannel + 1;
 
             }
+            LastChannel = CurrentChannel;
 
             ADCValues = ADCValues.OrderBy(z => z.Item1).ToList();
 

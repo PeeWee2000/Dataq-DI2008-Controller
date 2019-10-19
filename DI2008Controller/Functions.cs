@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LibUsbDotNet.Main;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -72,12 +73,13 @@ namespace DI2008Controller
         byte[] ReadBytes()
         {
             int ByteCount;
-            byte[] Buffer = new byte[128];
+            byte[] Buffer = new byte[256];
 
-            var Error = DI2008.Reader.Read(Buffer, 3000, out ByteCount);            
+            var Error = DI2008.Reader.Read(Buffer, 10000, out ByteCount);            
             if (Error != 0)
             {
-                throw new Exception(Error.ToString());
+                //throw new Exception(Error.ToString());
+                Thread.Sleep(0);
             }
 
 
@@ -94,11 +96,49 @@ namespace DI2008Controller
             return Buffer;
         }
 
+        private void ProcessReceievedData(object sender, EndpointDataEventArgs e)
+        {
+            byte[] BytesReceived = e.Buffer;
+
+            string Value = Encoding.ASCII.GetString(BytesReceived);
+            List<Tuple<int, int>> ADCValues = new List<Tuple<int, int>>();
+
+            if (Value.Contains("din ")) //Sometimes the dataq spits out a random digital read, rather than ignoring it this makes use of it
+            {
+                string DinNumber = Regex.Match(Value, @"\d+").Value;
+                int Status = Convert.ToInt32(DinNumber);
+                WriteDigitalValues(Status);
+
+            }
+            else if (BytesReceived.Count() > 15) //Errors or non-data reads are always less than 16 bytes
+            { ADCValues = Calculations.ConvertToADCValues(BytesReceived); }
+
+
+
+            if (ADCValues.Count == DI2008.EnabledAnalogChannels + 1) //+1 is for the Digital Channel readout
+            {
+                WriteAnalogValues(ADCValues);
+
+                int DigitalStatusByte = ADCValues[DI2008.EnabledAnalogChannels].Item2;
+                if (DigitalStatusByte <= 128 && DigitalStatusByte >= 0)
+                {
+                    WriteDigitalValues(DigitalStatusByte);
+                }
+            }
+        }
+
+
         /// <summary>
         /// Starts a background thread that continuously updates an internal variable that can be read via the ReadData function
         /// </summary>
         public void StartAcquiringData()
         {
+            WriteASCII("start 0");
+            DI2008.Reader.ReadBufferSize = 32;
+            DI2008.Reader.DataReceived += (ProcessReceievedData);
+            DI2008.Reader.DataReceivedEnabled = true;
+            
+
             //Writer = new Thread(()
             //    =>
             //{
@@ -109,45 +149,45 @@ namespace DI2008Controller
             //    }
             //});
 
-            Reader = new Thread(() =>
-            {
-                //Need to manually write the start command because capturing the first byte is important for synchronization
-                WriteASCII("start 0");
+            //Reader = new Thread(() =>
+            //{
+            //    //Need to manually write the start command because capturing the first byte is important for synchronization
+            //    WriteASCII("start 0");
 
 
-                while (StopRequest == false)
-                {
-                    byte[] readBuffer = ReadBytes();
-                    string Value = Encoding.ASCII.GetString(readBuffer);
-                    List<Tuple<int, int>> ADCValues = new List<Tuple<int, int>>();
+            //    while (StopRequest == false)
+            //    {
+            //        byte[] readBuffer = ReadBytes();
+            //        string Value = Encoding.ASCII.GetString(readBuffer);
+            //        List<Tuple<int, int>> ADCValues = new List<Tuple<int, int>>();
 
-                    if (Value.Contains("din ")) //Sometimes the dataq spits out a random digital read, rather than ignoring it this makes use of it
-                    {
-                        string DinNumber = Regex.Match(Value, @"\d+").Value;
-                        int Status = Convert.ToInt32(DinNumber);
-                        WriteDigitalValues(Status);
+            //        if (Value.Contains("din ")) //Sometimes the dataq spits out a random digital read, rather than ignoring it this makes use of it
+            //        {
+            //            string DinNumber = Regex.Match(Value, @"\d+").Value;
+            //            int Status = Convert.ToInt32(DinNumber);
+            //            WriteDigitalValues(Status);
 
-                    }
-                    else if (readBuffer.Count() > 15) //Errors or non-data reads are always less than 16 bytes
-                    { ADCValues = Calculations.ConvertToADCValues(readBuffer); }
+            //        }
+            //        else if (readBuffer.Count() > 15) //Errors or non-data reads are always less than 16 bytes
+            //        { ADCValues = Calculations.ConvertToADCValues(readBuffer); }
 
-                    
 
-                    if (ADCValues.Count == DI2008.EnabledAnalogChannels + 1) //+1 is for the Digital Channel readout
-                    {
-                        WriteAnalogValues(ADCValues);
 
-                        int DigitalStatusByte = ADCValues[DI2008.EnabledAnalogChannels ].Item2;
-                        if (DigitalStatusByte <= 128 && DigitalStatusByte >= 0)
-                        {
-                            WriteDigitalValues(DigitalStatusByte);
-                        }
-                    }
-                }
-                Write("stop");
-            });
+            //        if (ADCValues.Count == DI2008.EnabledAnalogChannels + 1) //+1 is for the Digital Channel readout
+            //        {
+            //            WriteAnalogValues(ADCValues);
 
-            Reader.Start();
+            //            int DigitalStatusByte = ADCValues[DI2008.EnabledAnalogChannels ].Item2;
+            //            if (DigitalStatusByte <= 128 && DigitalStatusByte >= 0)
+            //            {
+            //                WriteDigitalValues(DigitalStatusByte);
+            //            }
+            //        }
+            //    }
+            //    Write("stop");
+            //});
+
+            //Reader.Start();
             //Writer.Start();
         }
 
