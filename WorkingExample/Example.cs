@@ -17,13 +17,13 @@ namespace Waef
             //Dataq.Connect();            
 
             Dataq.Channels.Analog0 = ChannelConfiguration.KTypeTC;
-            Dataq.Channels.Analog1 = ChannelConfiguration.STypeTC;
-            //Dataq.Channels.Analog2 = ChannelConfiguration.STypeTC;
-            //Dataq.Channels.Analog3 = ChannelConfiguration.STypeTC;
-            //Dataq.Channels.Analog4 = ChannelConfiguration.STypeTC;
-            //Dataq.Channels.Analog5 = ChannelConfiguration.STypeTC;
-            //Dataq.Channels.Analog6 = ChannelConfiguration.STypeTC;
-            //Dataq.Channels.Analog7 = ChannelConfiguration._25v;
+            Dataq.Channels.Analog1 = ChannelConfiguration._10v;
+            Dataq.Channels.Analog2 = ChannelConfiguration.STypeTC;
+            Dataq.Channels.Analog3 = ChannelConfiguration.STypeTC;
+            Dataq.Channels.Analog4 = ChannelConfiguration.STypeTC;
+            Dataq.Channels.Analog5 = ChannelConfiguration.STypeTC;
+            Dataq.Channels.Analog6 = ChannelConfiguration.STypeTC;
+            //Dataq.Channels.Analog7 = ChannelConfiguration.STypeTC;
 
             Dataq.Channels.Digital0 = ChannelConfiguration.DigitalInput;
             Dataq.Channels.Digital1 = ChannelConfiguration.DigitalOutput;
@@ -81,25 +81,27 @@ namespace Waef
                 }
             });
 
-            //ColorChanger.Start();
 
 
             while (InstantaneousRead.Analog0 == null) 
             { Thread.Sleep(100); }
 
+            ColorChanger.Start();
 
+            Console.CursorVisible = false;
             while (true)
             {
                 try
                 {
-                    Console.CursorVisible = false;
                     Console.SetCursorPosition(0, 0);
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.Write(Math.Round(InstantaneousRead.Analog0.Value.Value, 2));
+                    Console.Write(Math.Round(InstantaneousRead.Analog0.Value.Value, 2).ToString("0.00") + " ");
 
+                    Console.ForegroundColor = ConsoleColor.DarkGreen;
+                    Console.Write(Math.Round(InstantaneousRead.Analog1.Value.Value, 4) + " ");
 
                     Console.ForegroundColor = ConsoleColor.Blue;
-                    Console.Write(" " + InstantaneousRead.DigitalStates + "\r\n") ;
+                    Console.Write(" " + InstantaneousRead.DigitalStates + "                             \r\n") ;
 
 
                     //Thread.Sleep(100);

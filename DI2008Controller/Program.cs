@@ -41,31 +41,7 @@ namespace DI2008Controller
                 DI_2008.Open();
             }
 
-            bool Success = false;
-            while (Success == false)
-            {
-                Writer = DI_2008.OpenEndpointWriter(WriteEndpointID.Ep01);
-            Reader = DI_2008.OpenEndpointReader(ReadEndpointID.Ep01);
-
-
-
-            //No clue what these do but they keep the device from hanging on program restarts #TrialAndError
-            Writer.Abort();
-            Writer.Reset();
-            Writer.Flush();
-            Reader.Abort();
-            Reader.ReadFlush();
-            Reader.Flush();
-            Reader.Reset();
-                InternalFunctions.Write("stop"); //Make sure the device wasnt left in a scan state
-
-                try
-                { 
-                    var DeviceResponding = InternalFunctions.Write("info 0");
-                    Success = DeviceResponding.Contains("DATAQ");
-                }
-                catch { }
-            }
+            InitalizeAndVerify();
 
             DeviceInfo.Serial = InternalFunctions.Write("info 6");
             DeviceInfo.FirmwareVersion = InternalFunctions.Write("info 2");
@@ -74,6 +50,37 @@ namespace DI2008Controller
             DeviceInfo.PID = DI_2008.UsbRegistryInfo.Pid;
             DeviceInfo.VID = DI_2008.UsbRegistryInfo.Vid;
         }
+
+
+        private static void InitalizeAndVerify()
+        {
+            bool Success = false;
+            while (Success == false)
+            {
+                Writer = DI_2008.OpenEndpointWriter(WriteEndpointID.Ep01);
+                Reader = DI_2008.OpenEndpointReader(ReadEndpointID.Ep01);
+
+
+
+                //No clue what these do but they keep the device from hanging on program restarts #TrialAndError
+                Writer.Abort();
+                Writer.Reset();
+                Writer.Flush();
+                Reader.Abort();
+                Reader.ReadFlush();
+                Reader.Flush();
+                Reader.Reset();
+                InternalFunctions.Write("stop"); //Make sure the device wasnt left in a scan state
+
+                try
+                {
+                    var DeviceResponding = InternalFunctions.Write("info 0");
+                    Success = DeviceResponding.Contains("DATAQ");
+                }
+                catch { }
+            }
+        }
+
 
         /// <summary>
         /// Connect a dataq based on its serial number -- Useful if there will be multiple Dataqs on a PC at one time

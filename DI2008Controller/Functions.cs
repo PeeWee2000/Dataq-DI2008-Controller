@@ -33,7 +33,7 @@ namespace DI2008Controller
         public void SetLedColor(LEDColor Color)
         {
             string Command = "led " + (int)Color;
-            Write(Command);
+            WriteASCII(Command);
         }
 
         /// <summary>
@@ -42,19 +42,26 @@ namespace DI2008Controller
         public string Write(string Command)
         {
             WriteASCII(Command);
-            var Response = ReadBytes();
 
-            var TrimmedOutput = Encoding.ASCII.GetString(Response);
-            TrimmedOutput = TrimmedOutput.Replace(Command, "");
-            string Output;
-            if (TrimmedOutput.Length == 0)
-            { Output = Encoding.ASCII.GetString(Response); }
-            else { Output = TrimmedOutput; }
+            if (DI2008.Reader.DataReceivedEnabled == false)
+            { 
+                var Response = ReadBytes();
 
-            Output = Output.Replace("\0", "");
-            Output = Output.Replace("\r", "");
+                var TrimmedOutput = Encoding.ASCII.GetString(Response);
+                TrimmedOutput = TrimmedOutput.Replace(Command, "");
+                string Output;
+                if (TrimmedOutput.Length == 0)
+                { Output = Encoding.ASCII.GetString(Response); }
+                else { Output = TrimmedOutput; }
 
-            return Output;
+                Output = Output.Replace("\0", "");
+                Output = Output.Replace("\r", "");
+
+                return Output;
+            }
+            else
+            { return "Scan in process, sent commands are not echoed"; }
+
         }
 
         void WriteBytes(byte[] BytesToWrite)
@@ -95,7 +102,8 @@ namespace DI2008Controller
 
         private void ProcessReceievedData(object sender, EndpointDataEventArgs e)
         {
-            byte[] BytesReceived = e.Buffer;
+            byte[] BytesReceived = e.Buffer.Take(16).ToArray();
+            
 
             string Value = Encoding.ASCII.GetString(BytesReceived);
             List<Tuple<int, int>> ADCValues = new List<Tuple<int, int>>();
@@ -131,7 +139,7 @@ namespace DI2008Controller
         public void StartAcquiringData()
         {
             WriteASCII("start 0");
-            DI2008.Reader.ReadBufferSize = 32;
+            DI2008.Reader.ReadBufferSize = 64;
             DI2008.Reader.DataReceived += (ProcessReceievedData);
             DI2008.Reader.DataReceivedEnabled = true;          
         }
