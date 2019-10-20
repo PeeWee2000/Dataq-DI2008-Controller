@@ -10,15 +10,15 @@ namespace DI2008Controller
 {
     public class Functions
     {
-        Thread Reader;
-        //Thread Writer;
         private ReadRecord Data = new ReadRecord();
-        private bool StopRequest = false;
 
         public void StopAcquiringData()
         {
-            StopRequest = true;
+            DI2008.Reader.DataReceivedEnabled = false;
+            WriteASCII("stop");
         }
+
+
 
         /// <summary>
         /// Returns the last value(s) read from the Dataq based on which channels were enabled
@@ -73,13 +73,12 @@ namespace DI2008Controller
         byte[] ReadBytes()
         {
             int ByteCount;
-            byte[] Buffer = new byte[256];
+            byte[] Buffer = new byte[32];
 
-            var Error = DI2008.Reader.Read(Buffer, 10000, out ByteCount);            
+            var Error = DI2008.Reader.Read(Buffer, 3000, out ByteCount);            
             if (Error != 0)
             {
-                //throw new Exception(Error.ToString());
-                Thread.Sleep(0);
+                throw new Exception("Error trying to read from buffer, if this persists reset the device ", new Exception(Error.ToString()));
             }
 
 
@@ -87,8 +86,6 @@ namespace DI2008Controller
             {
                 Thread.Sleep(1000);
                 WriteASCII("start");
-                DI2008.Reader.Read(Buffer, 3000, out ByteCount);
-                DI2008.Reader.Read(Buffer, 3000, out ByteCount);
             }
 
             Buffer = Buffer.Take(ByteCount).ToArray();
@@ -136,59 +133,7 @@ namespace DI2008Controller
             WriteASCII("start 0");
             DI2008.Reader.ReadBufferSize = 32;
             DI2008.Reader.DataReceived += (ProcessReceievedData);
-            DI2008.Reader.DataReceivedEnabled = true;
-            
-
-            //Writer = new Thread(()
-            //    =>
-            //{
-            //    while (StopRequest == false)
-            //    {
-            //        Thread.Sleep(1000);
-            //        WriteASCII("din");
-            //    }
-            //});
-
-            //Reader = new Thread(() =>
-            //{
-            //    //Need to manually write the start command because capturing the first byte is important for synchronization
-            //    WriteASCII("start 0");
-
-
-            //    while (StopRequest == false)
-            //    {
-            //        byte[] readBuffer = ReadBytes();
-            //        string Value = Encoding.ASCII.GetString(readBuffer);
-            //        List<Tuple<int, int>> ADCValues = new List<Tuple<int, int>>();
-
-            //        if (Value.Contains("din ")) //Sometimes the dataq spits out a random digital read, rather than ignoring it this makes use of it
-            //        {
-            //            string DinNumber = Regex.Match(Value, @"\d+").Value;
-            //            int Status = Convert.ToInt32(DinNumber);
-            //            WriteDigitalValues(Status);
-
-            //        }
-            //        else if (readBuffer.Count() > 15) //Errors or non-data reads are always less than 16 bytes
-            //        { ADCValues = Calculations.ConvertToADCValues(readBuffer); }
-
-
-
-            //        if (ADCValues.Count == DI2008.EnabledAnalogChannels + 1) //+1 is for the Digital Channel readout
-            //        {
-            //            WriteAnalogValues(ADCValues);
-
-            //            int DigitalStatusByte = ADCValues[DI2008.EnabledAnalogChannels ].Item2;
-            //            if (DigitalStatusByte <= 128 && DigitalStatusByte >= 0)
-            //            {
-            //                WriteDigitalValues(DigitalStatusByte);
-            //            }
-            //        }
-            //    }
-            //    Write("stop");
-            //});
-
-            //Reader.Start();
-            //Writer.Start();
+            DI2008.Reader.DataReceivedEnabled = true;          
         }
 
 

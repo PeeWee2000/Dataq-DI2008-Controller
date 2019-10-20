@@ -92,21 +92,23 @@ namespace Waef
             {
                 try
                 {
+                    Console.CursorVisible = false;
+                    Console.SetCursorPosition(0, 0);
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine(Math.Round(InstantaneousRead.Analog0.Value.Value, 2));
+                    Console.Write(Math.Round(InstantaneousRead.Analog0.Value.Value, 2));
 
 
                     Console.ForegroundColor = ConsoleColor.Blue;
-                    Console.WriteLine(InstantaneousRead.DigitalStates);
+                    Console.Write(" " + InstantaneousRead.DigitalStates + "\r\n") ;
 
 
-                    Thread.Sleep(100);
+                    //Thread.Sleep(100);
 
 
 
                 }
                 catch { }
-                Thread.Sleep(100);
+                //Thread.Sleep(100);
             }
         }
     }

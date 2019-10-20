@@ -46,13 +46,22 @@ namespace DI2008Controller
             Reader = DI_2008.OpenEndpointReader(ReadEndpointID.Ep01);
 
 
-            InternalFunctions.Write("stop"); //Make sure the device wasnt left in a scan state and clear all channels
-            InternalFunctions.Write("ps 1");
-            //InternalFunctions.Write("slist 0 0");
+            //No clue what these do but they keep the device from hanging on program restarts #TrialAndError
+            Writer.Abort();
+            Writer.Reset();
+            Writer.Flush();
+            Reader.Abort();
+            Reader.ReadFlush();
+            Reader.Flush();
+            Reader.Reset();
 
-            //DeviceInfo.Serial = Functions.Write("info 6");
+            InternalFunctions.StopAcquiringData(); //Make sure the device wasnt left in a scan state
+
+
             DeviceInfo.Serial = InternalFunctions.Write("info 6");
             DeviceInfo.FirmwareVersion = InternalFunctions.Write("info 2");
+            InternalFunctions.Write("ps 1");
+
             DeviceInfo.PID = DI_2008.UsbRegistryInfo.Pid;
             DeviceInfo.VID = DI_2008.UsbRegistryInfo.Vid;
         }
