@@ -8,4 +8,4 @@ Along with being easy to use, the entire library is strongly typed which minimiz
 
 To see this project in action simply plug in a DI2008, load the solution, make sure the Example project is set as the startup project and press F5. The example is brutally simple and demonstrates the simplicity of this solution.
 
-https://github.com/PeeWee2000/Dataq-DI2008-Controller/blob/master/WorkingExample/DI2008InAction.png
+![InAction](https://github.com/PeeWee2000/Dataq-DI2008-Controller/blob/master/WorkingExample/DI2008InAction.png)
