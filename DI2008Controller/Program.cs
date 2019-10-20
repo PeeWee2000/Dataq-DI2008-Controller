@@ -41,9 +41,12 @@ namespace DI2008Controller
                 DI_2008.Open();
             }
 
-
-            Writer = DI_2008.OpenEndpointWriter(WriteEndpointID.Ep01);
+            bool Success = false;
+            while (Success == false)
+            {
+                Writer = DI_2008.OpenEndpointWriter(WriteEndpointID.Ep01);
             Reader = DI_2008.OpenEndpointReader(ReadEndpointID.Ep01);
+
 
 
             //No clue what these do but they keep the device from hanging on program restarts #TrialAndError
@@ -54,9 +57,15 @@ namespace DI2008Controller
             Reader.ReadFlush();
             Reader.Flush();
             Reader.Reset();
+                InternalFunctions.Write("stop"); //Make sure the device wasnt left in a scan state
 
-            InternalFunctions.StopAcquiringData(); //Make sure the device wasnt left in a scan state
-
+                try
+                { 
+                    var DeviceResponding = InternalFunctions.Write("info 0");
+                    Success = DeviceResponding.Contains("DATAQ");
+                }
+                catch { }
+            }
 
             DeviceInfo.Serial = InternalFunctions.Write("info 6");
             DeviceInfo.FirmwareVersion = InternalFunctions.Write("info 2");

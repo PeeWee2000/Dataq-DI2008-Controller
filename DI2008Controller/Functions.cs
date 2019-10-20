@@ -78,7 +78,7 @@ namespace DI2008Controller
             var Error = DI2008.Reader.Read(Buffer, 3000, out ByteCount);            
             if (Error != 0)
             {
-                throw new Exception("Error trying to read from buffer, if this persists reset the device ", new Exception(Error.ToString()));
+                //throw new Exception("Error trying to read from buffer, if this persists reset the device ", new Exception(Error.ToString()));
             }
 
 
