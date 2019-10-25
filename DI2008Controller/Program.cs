@@ -139,10 +139,13 @@ namespace DI2008Controller
             ConfigCommands.Insert(0, "srate " + "28");
             ConfigCommands.Insert(0, "dec " + "1");
 
+            List<string> Responses = new List<string>();
             foreach (string Command in ConfigCommands)
             {
-                InternalFunctions.Write(Command);
+                string Response = InternalFunctions.Write(Command);
+                Responses.Add(Response);
             }
+
             EnabledAnalogChannels = CurrentConfig.Select(x => x.ChannelConfiguration).Where(x => (int)x <= 20).Count();
         }
 

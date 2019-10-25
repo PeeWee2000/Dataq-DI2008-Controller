@@ -47,13 +47,8 @@ namespace DI2008Controller
             { 
                 var Response = ReadBytes();
 
-                var TrimmedOutput = Encoding.ASCII.GetString(Response);
-                TrimmedOutput = TrimmedOutput.Replace(Command, "");
-                string Output;
-                if (TrimmedOutput.Length == 0)
-                { Output = Encoding.ASCII.GetString(Response); }
-                else { Output = TrimmedOutput; }
-
+                var Output = Encoding.ASCII.GetString(Response);
+              
                 Output = Output.Replace("\0", "");
                 Output = Output.Replace("\r", "");
 
@@ -102,23 +97,12 @@ namespace DI2008Controller
 
         private void ProcessReceievedData(object sender, EndpointDataEventArgs e)
         {
-            byte[] BytesReceived = e.Buffer.Take(16).ToArray();
+            byte[] BytesReceived = e.Buffer.Take(32).ToArray();
             
-
             string Value = Encoding.ASCII.GetString(BytesReceived);
             List<Tuple<int, int>> ADCValues = new List<Tuple<int, int>>();
 
-            if (Value.Contains("din ")) //Sometimes the dataq spits out a random digital read, rather than ignoring it this makes use of it
-            {
-                string DinNumber = Regex.Match(Value, @"\d+").Value;
-                int Status = Convert.ToInt32(DinNumber);
-                WriteDigitalValues(Status);
-
-            }
-            else if (BytesReceived.Count() > 15) //Errors or non-data reads are always less than 16 bytes
-            { ADCValues = Calculations.ConvertToADCValues(BytesReceived); }
-
-
+            ADCValues = Calculations.ConvertToADCValues(BytesReceived); 
 
             if (ADCValues.Count == DI2008.EnabledAnalogChannels + 1) //+1 is for the Digital Channel readout
             {

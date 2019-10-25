@@ -22,40 +22,19 @@ namespace Waef
             Dataq.Channels.Analog4 = ChannelConfiguration.STypeTC;
             Dataq.Channels.Analog5 = ChannelConfiguration.STypeTC;
             Dataq.Channels.Analog6 = ChannelConfiguration.STypeTC;
-            //Dataq.Channels.Analog7 = ChannelConfiguration.STypeTC;
+            Dataq.Channels.Analog7 = ChannelConfiguration.STypeTC;
 
             Dataq.Channels.Digital0 = ChannelConfiguration.DigitalInput;
             Dataq.Channels.Digital1 = ChannelConfiguration.DigitalOutput;
-            //Dataq.Channels.Digital2 = ChannelConfiguration.DigitalOutput;
-
-            //Dataq.Channels.Analog0 = ChannelConfiguration.KTypeTC; // Column Head
-            //Dataq.Channels.Analog1 = ChannelConfiguration.KTypeTC; // Reflux Jacket
-            //Dataq.Channels.Analog2 = ChannelConfiguration.KTypeTC; // Condenser Jacket
-            //Dataq.Channels.Analog3 = ChannelConfiguration.KTypeTC; // Coolant Reservoir
-            //Dataq.Channels.Analog4 = ChannelConfiguration._100mv; // System Pressure
-            //Dataq.Channels.Analog5 = ChannelConfiguration._100mv; // System Amperage
-            //Dataq.Channels.Analog6 = ChannelConfiguration._100mv;
-
-            //Dataq.Channels.Digital0 = ChannelConfiguration.DigitalInput; // Still Low Switch
-            //Dataq.Channels.Digital1 = ChannelConfiguration.DigitalInput; // Still High Switch
-            ////Dataq.Channels.Digital2 = ChannelConfiguration.DigitalInput; // RV Low Switch
-            ////Dataq.Channels.Digital3 = ChannelConfiguration.DigitalInput; // RV High Swtich
-
 
             Dataq.ConfigureChannels();
 
-            var Waef = Dataq.Functions.Write("stop");
-            Waef = Dataq.Functions.Write("din");
-            
-            
+            var ResponseFromDataq = Dataq.Functions.Write("stop");
+                      
             
             Dataq.Functions.StartAcquiringData();
 
-
-            
-
-
-            ReadRecord InstantaneousRead = new ReadRecord();
+            DI2008Controller.ReadRecord InstantaneousRead = new ReadRecord();
 
             Reader = new Thread(() =>
             {
@@ -95,8 +74,7 @@ namespace Waef
             while (InstantaneousRead.Analog0 == null) 
             { Thread.Sleep(100); }
 
-            //ColorChanger.Start();
-            Dataq.Functions.SetLedColor(LEDColor.Magenta);
+            ColorChanger.Start();
 
             Console.CursorVisible = false;
             while (true)
