@@ -150,7 +150,7 @@ namespace DI2008Controller
         {
             for (int i = 0; i < DI2008.EnabledAnalogChannels; i -= -1)
             {
-                double ActualValue = 0;
+                decimal ActualValue = 0;
 
                 var ChannelType = DI2008.CurrentConfig[i].ChannelConfiguration;
                 var ChannelName = DI2008.CurrentConfig[i].ChannelID.ToString();

@@ -46,55 +46,55 @@ namespace DI2008Controller
             ADCValues = ADCValues.OrderBy(z => z.Item1).ToList();
             return ADCValues;
         }
-        public static double ConvertADCtoVoltage(int ADC, ChannelConfiguration ChannelType)
+        public static decimal ConvertADCtoVoltage(int ADC, ChannelConfiguration ChannelType)
         {
-            return ADC;
+            return ADC / 120;
         }
-        public static double ConvertADCtoCelsius(int ADC, ChannelConfiguration ThermocoupleType)
+        public static decimal ConvertADCtoCelsius(int ADC, ChannelConfiguration ThermocoupleType)
         {
             //Degrees Celsius = (m*V) + B 
             //V is the ADC value and m/B are constants relative to the thermocouple type
             //Reference the DI-2008 documentation on Page 18 for more details
-            double mValue = 0;
+            decimal mValue = 0;
             int BValue = 0;
 
             switch (ThermocoupleType)
             {
                 case ChannelConfiguration.BTypeTC:
-                    mValue = 0.023956;
+                    mValue = 0.023956M;
                     BValue = 1035;
                     break;
                 case ChannelConfiguration.ETypeTC:
-                    mValue = 0.018311;
+                    mValue = 0.018311M;
                     BValue = 400;
                     break;
                 case ChannelConfiguration.JTypeTC:
-                    mValue = 0.021515;
+                    mValue = 0.021515M;
                     BValue = 495;
                     break;
                 case ChannelConfiguration.KTypeTC:
-                    mValue = 0.023987;
+                    mValue = 0.023987M;
                     BValue = 586;
                     break;
                 case ChannelConfiguration.NTypeTC:
-                    mValue = 0.022888;
+                    mValue = 0.022888M;
                     BValue = 550;
                     break;
                 case ChannelConfiguration.RTypeTC:
-                    mValue = 0.02774;
+                    mValue = 0.02774M;
                     BValue = 859;
                     break;
                 case ChannelConfiguration.STypeTC:
-                    mValue = 0.02774;
+                    mValue = 0.02774M;
                     BValue = 859;
                     break;
                 case ChannelConfiguration.TTypeTC:
-                    mValue = 0.009155;
+                    mValue = 0.009155M;
                     BValue = 100;
                     break;
             }
 
-            double Temperature = mValue * ADC + BValue;
+            decimal Temperature = mValue * ADC + BValue;
 
             return Temperature;
         }

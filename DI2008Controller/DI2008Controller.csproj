@@ -2,6 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Company />
+    <Product>Dataq DI2008</Product>
+    <Authors>Rider Harrison</Authors>
+    <PackageProjectUrl>https://github.com/PeeWee2000/Dataq-DI2008-Controller</PackageProjectUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
