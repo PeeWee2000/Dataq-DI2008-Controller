@@ -1,5 +1,6 @@
 ﻿using LibUsbDotNet.Main;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,7 @@ namespace DI2008Controller
     public class Functions
     {
         private ReadRecord Data = new ReadRecord();
+        private int CurrentDigitalStates = 0;
 
         public void StopAcquiringData()
         {
@@ -34,6 +36,51 @@ namespace DI2008Controller
         {
             string Command = "led " + (int)Color;
             WriteASCII(Command);
+        }
+
+        public void EnableChannel(ChannelID Channel)
+        {
+            if (Channel.ToString().Contains("Digital"))
+            {
+                if (Data.Analog0 != null)
+                {
+                    int ActualChannelID = (int)Channel - 7;
+                    int Command = CurrentDigitalStates;
+
+                    int BitPosition = 1;
+                    for (int i = 1; i < ActualChannelID; i++)
+                    { BitPosition *= 2; }
+
+                    Command = (byte)(Command & BitPosition);
+                    if (Command < 128)
+                    { 
+                        Write("dout " + Command);
+                    }
+                }
+            }
+        }
+
+        public void DisableChannel(ChannelID Channel)
+        {
+            if (Channel.ToString().Contains("Digital"))
+            {
+                if (Data.Analog0 != null)
+                {
+                    int ActualChannelID = (int)Channel - 7;
+                 
+
+                    int BitPosition = 1;
+                    for (int i = 1; i < ActualChannelID; i++)
+                    { BitPosition *= 2; }
+
+                    if (BitPosition < CurrentDigitalStates)
+                    {
+                        int Command = CurrentDigitalStates - BitPosition;
+
+                        Write("dout " + Command);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -164,7 +211,7 @@ namespace DI2008Controller
 
         private void WriteDigitalValues(int DigitalStatusByte)
         {
-            Data.GetType().GetProperty("DigitalStates").SetValue(Data, DigitalStatusByte);
+            CurrentDigitalStates = DigitalStatusByte;
             var DigitalReadings = Calculations.GetDigitalChannelStates(DigitalStatusByte);
             foreach (var ChannelState in DigitalReadings)
             {

@@ -23,6 +23,8 @@
         public  ChannelConfiguration? Digital3 { get; set; }
         public  ChannelConfiguration? Digital4 { get; set; }
         public  ChannelConfiguration? Digital5 { get; set; }
+        public ChannelConfiguration? Digital6 { get; set; }
+
     }
 
     public class DeviceInfo

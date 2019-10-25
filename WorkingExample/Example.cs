@@ -26,6 +26,11 @@ namespace Waef
 
             Dataq.Channels.Digital0 = ChannelConfiguration.DigitalInput;
             Dataq.Channels.Digital1 = ChannelConfiguration.DigitalOutput;
+            Dataq.Channels.Digital2 = ChannelConfiguration.DigitalOutput;
+            Dataq.Channels.Digital3 = ChannelConfiguration.DigitalOutput;
+            Dataq.Channels.Digital4 = ChannelConfiguration.DigitalOutput;
+            Dataq.Channels.Digital5 = ChannelConfiguration.DigitalOutput;
+            Dataq.Channels.Digital6 = ChannelConfiguration.DigitalOutput;
 
             Dataq.ConfigureChannels();
 
@@ -59,12 +64,13 @@ namespace Waef
                 {
                     foreach (LEDColor color in (LEDColor[])Enum.GetValues(typeof(LEDColor)))
                     {
+                        //Dataq.Functions.EnableChannel(ChannelID.Digital6);
+
+                        Dataq.Functions.SetLedColor(color);
                         Thread.Sleep(1000);
-                    
-                        lock (Dataq)
-                        {
-                            Dataq.Functions.SetLedColor(color);
-                        }
+                        //Dataq.Functions.DisableChannel(ChannelID.Digital6);
+                        Thread.Sleep(1000);
+                        //Dataq.Functions.Write("dout 64");
                     }
                 }
             });
@@ -94,7 +100,7 @@ namespace Waef
                     Console.WriteLine(DateTime.Now);
 
                     Debug.WriteLine(Math.Round(InstantaneousRead.Analog0.Value.Value, 2).ToString("0.00") + " " + Math.Round(InstantaneousRead.Analog1.Value.Value, 4) + " " + " 1:" + InstantaneousRead.Digital0 + " 2:" + InstantaneousRead.Digital1 + " 3:" + InstantaneousRead.Digital2 + " 4:" + InstantaneousRead.Digital3);
-
+                    
                     Thread.Sleep(100);
                 }
                 catch { }

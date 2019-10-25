@@ -34,8 +34,7 @@ namespace DI2008Controller
                     }
                     if (CurrentChannel == DI2008.EnabledAnalogChannels) //If all analog channels have been read, handle the digital readout then start over
                     {
-                            ADCValues.Add(new Tuple<int, int>((DI2008.EnabledAnalogChannels), RawData[i + 1]));
-                            
+                        ADCValues.Add(new Tuple<int, int>((DI2008.EnabledAnalogChannels), RawData[i + 1]));                            
                     }
                 }
 
