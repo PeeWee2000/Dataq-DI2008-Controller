@@ -1,10 +1,8 @@
 ﻿using LibUsbDotNet.Main;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace DI2008Controller
@@ -203,7 +201,19 @@ namespace DI2008Controller
                 { throw new NotImplementedException(); } //Add logic for reading counter, frequency digital inputs here
 
                 ChannelData.ChannelConfiguration = ChannelType;
-                ChannelData.Value = ActualValue;
+
+
+                Data PreviousValues;
+                if (Data.GetType().GetProperty(ChannelName).GetValue(Data) != null)
+                { 
+                    PreviousValues = (Data)Data.GetType().GetProperty(ChannelName).GetValue(Data);
+                    ChannelData.Value = (PreviousValues.Value + ActualValue) / 2;
+                }
+                else
+                {
+                    ChannelData.Value = ActualValue;
+                }
+
 
                 Data.GetType().GetProperty(ChannelName).SetValue(Data, ChannelData);
             }

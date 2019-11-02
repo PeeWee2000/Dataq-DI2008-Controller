@@ -15,14 +15,14 @@ namespace Waef
         {
             var Dataq = new DI2008();
 
-            Dataq.Channels.Analog0 = ChannelConfiguration._10v;
+            Dataq.Channels.Analog0 = ChannelConfiguration.KTypeTC;
             Dataq.Channels.Analog1 = ChannelConfiguration._10v;
-            Dataq.Channels.Analog2 = ChannelConfiguration.STypeTC;
-            Dataq.Channels.Analog3 = ChannelConfiguration.STypeTC;
-            Dataq.Channels.Analog4 = ChannelConfiguration.STypeTC;
-            Dataq.Channels.Analog5 = ChannelConfiguration.STypeTC;
-            Dataq.Channels.Analog6 = ChannelConfiguration.STypeTC;
-            Dataq.Channels.Analog7 = ChannelConfiguration.STypeTC;
+            Dataq.Channels.Analog2 = ChannelConfiguration.KTypeTC;
+            Dataq.Channels.Analog3 = ChannelConfiguration._50v;
+            Dataq.Channels.Analog4 = ChannelConfiguration._50v;
+            Dataq.Channels.Analog5 = ChannelConfiguration._50v;
+            Dataq.Channels.Analog6 = ChannelConfiguration._50v;
+            Dataq.Channels.Analog7 = ChannelConfiguration._50v;
 
             Dataq.Channels.Digital0 = ChannelConfiguration.DigitalInput;
             Dataq.Channels.Digital1 = ChannelConfiguration.DigitalOutput;
@@ -80,7 +80,7 @@ namespace Waef
             while (InstantaneousRead.Analog0 == null) 
             { Thread.Sleep(100); }
 
-            ColorChanger.Start();
+            ColorChanger.Start(); 
 
             Console.CursorVisible = false;
             while (true)
@@ -92,14 +92,14 @@ namespace Waef
                     Console.Write(Math.Round(InstantaneousRead.Analog0.Value.Value, 2).ToString("0.00") + " ");
 
                     Console.ForegroundColor = ConsoleColor.DarkGreen;
-                    Console.Write(Math.Round(InstantaneousRead.Analog1.Value.Value, 4) + " ");
+                    Console.Write(Math.Round(InstantaneousRead.Analog2.Value.Value, 4) + " ");
 
                     Console.ForegroundColor = ConsoleColor.White;
                     Console.Write(" 1:" + InstantaneousRead.Digital0 + " 2:" + InstantaneousRead.Digital1 + " 3:" + InstantaneousRead.Digital2 + " 4:" + InstantaneousRead.Digital3 + "                             \r\n") ;
 
                     Console.WriteLine(DateTime.Now);
 
-                    Debug.WriteLine(Math.Round(InstantaneousRead.Analog0.Value.Value, 2).ToString("0.00") + " " + Math.Round(InstantaneousRead.Analog1.Value.Value, 4) + " " + " 1:" + InstantaneousRead.Digital0 + " 2:" + InstantaneousRead.Digital1 + " 3:" + InstantaneousRead.Digital2 + " 4:" + InstantaneousRead.Digital3);
+                    Debug.WriteLine(Math.Round(InstantaneousRead.Analog0.Value.Value, 2).ToString("0.00") + " " + Math.Round(InstantaneousRead.Analog2.Value.Value, 4) + " " + " 1:" + InstantaneousRead.Digital0 + " 2:" + InstantaneousRead.Digital1 + " 3:" + InstantaneousRead.Digital2 + " 4:" + InstantaneousRead.Digital3);
                     
                     Thread.Sleep(100);
                 }

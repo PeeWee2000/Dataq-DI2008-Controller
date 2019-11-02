@@ -136,8 +136,9 @@ namespace DI2008Controller
             }
             ConfigCommands.Add("slist " + ScanListPosition + " 8");
             ConfigCommands.Insert(0, "endo " + DigitalChannelCommand);
-            ConfigCommands.Insert(0, "srate " + "28");
-            ConfigCommands.Insert(0, "dec " + "1");
+            ConfigCommands.Insert(0, "filter * 1");
+            ConfigCommands.Insert(0, "srate " + "4");
+            ConfigCommands.Insert(0, "dec " + "25");
 
             List<string> Responses = new List<string>();
             foreach (string Command in ConfigCommands)
