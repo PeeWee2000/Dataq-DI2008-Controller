@@ -15,7 +15,7 @@ namespace Waef
         {
             var Dataq = new DI2008();
 
-            Dataq.Channels.Analog0 = ChannelConfiguration.KTypeTC;
+            Dataq.Channels.Analog0 = ChannelConfiguration._10v;
             Dataq.Channels.Analog1 = ChannelConfiguration._10v;
             Dataq.Channels.Analog2 = ChannelConfiguration.KTypeTC;
             Dataq.Channels.Analog3 = ChannelConfiguration._50v;
@@ -92,7 +92,7 @@ namespace Waef
                     Console.Write(Math.Round(InstantaneousRead.Analog0.Value.Value, 2).ToString("0.00") + " ");
 
                     Console.ForegroundColor = ConsoleColor.DarkGreen;
-                    Console.Write(Math.Round(InstantaneousRead.Analog2.Value.Value, 4) + " ");
+                    Console.Write(Math.Round(InstantaneousRead.Analog1.Value.Value, 4) + " ");
 
                     Console.ForegroundColor = ConsoleColor.White;
                     Console.Write(" 1:" + InstantaneousRead.Digital0 + " 2:" + InstantaneousRead.Digital1 + " 3:" + InstantaneousRead.Digital2 + " 4:" + InstantaneousRead.Digital3 + "                             \r\n") ;
