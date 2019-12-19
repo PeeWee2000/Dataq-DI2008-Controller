@@ -16,7 +16,9 @@ namespace DI2008Controller
             var RawValues = new List<Tuple<int, int>>();
             byte[] BytePair = new byte[2];
 
-            for (int i = 0; i < TimesToLoop; i += 2)
+
+            int i = 0;
+            while (i < TimesToLoop) 
             {
                 //Sequentially read the list until the digital byte is hit
                 while (CurrentChannel < DigitalChannelID && i < TimesToLoop)
@@ -34,12 +36,13 @@ namespace DI2008Controller
                 { 
                     RawValues.Add(new Tuple<int, int>(DigitalChannelID, RawData[i + 1]));
                     i += 2;
+                    CurrentChannel = 0;
                 }
             }
 
             var AveragedValues = new List<Tuple<int, decimal>>();
 
-            for (int i = 0; i < DigitalChannelID; i++)
+            for (i = 0; i < DigitalChannelID; i++)
             {
                 decimal AverageADCValue = (decimal)RawValues.Where(x => x.Item1 == i).Average(x => x.Item2);
                 AveragedValues.Add(new Tuple<int, decimal>(i, AverageADCValue));

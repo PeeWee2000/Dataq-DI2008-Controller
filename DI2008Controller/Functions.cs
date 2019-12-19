@@ -192,7 +192,7 @@ namespace DI2008Controller
                 
                 Data.GetType().GetProperty(ChannelName).SetValue(Data, ChannelData);
             }
-            int DigitalStatusByte = Convert.ToInt32(ADCValues[DI2008.EnabledAnalogChannels].Item2);
+            int DigitalStatusByte = 127;//Convert.ToInt32(ADCValues[DI2008.EnabledAnalogChannels].Item2);
 
             CurrentDigitalStates = DigitalStatusByte;
             var DigitalReadings = Calculations.GetDigitalChannelStates(DigitalStatusByte);
