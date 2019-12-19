@@ -33,7 +33,8 @@ namespace DI2008Controller
 
                 //Once all analog channels have been read, handle the digital readout then start over                
                 if (i < TimesToLoop)
-                { 
+                {
+                    int DigitalStatus = RawData[i + 1];
                     RawValues.Add(new Tuple<int, int>(DigitalChannelID, RawData[i + 1]));
                     i += 2;
                     CurrentChannel = 0;
@@ -48,7 +49,7 @@ namespace DI2008Controller
                 AveragedValues.Add(new Tuple<int, decimal>(i, AverageADCValue));
             }
 
-            AveragedValues.Add(new Tuple<int, decimal>(DigitalChannelID, RawValues[DigitalChannelID].Item2));
+            AveragedValues.Add(new Tuple<int, decimal>(DigitalChannelID, RawValues.Where(x => x.Item1 == DigitalChannelID).First().Item2));
 
             return AveragedValues;
         }
