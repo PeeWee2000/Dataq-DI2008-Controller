@@ -9,44 +9,51 @@ namespace DI2008Controller
     {
         public static int CurrentChannel = 0;
 
-        public static List<Tuple<int, int>> ConvertToADCValues(byte[] RawData)
+        public static List<Tuple<int, decimal>> ConvertToADCValues(byte[] RawData)
         {
+            int DigitalChannelID = DI2008.EnabledAnalogChannels;
             int TimesToLoop = RawData.Count();
-            var ADCValues = new List<Tuple<int, int>>();
+            var RawValues = new List<Tuple<int, int>>();
+            byte[] BytePair = new byte[2];
 
 
-            
-            for (int i = 0; i < TimesToLoop; i += 2)
+            int i = 0;
+            while (i < TimesToLoop) 
             {
-                
-
-
-                //This is inefficent and causes good reads to be ignored when there are less than 7 channels enabled, if you need higher frequency readings this will need to be optimized
-                if (ADCValues.Count <= DI2008.EnabledAnalogChannels)
-                { 
-                    if (CurrentChannel < DI2008.EnabledAnalogChannels && CurrentChannel >= 0)
-                    {
-                        byte[] BytePair = new byte[2];
-                        BytePair[0] = RawData[i];
-                        BytePair[1] = RawData[i + 1];
-                        short ADCValue = BitConverter.ToInt16(BytePair, 0);
-                        ADCValues.Add(new Tuple<int, int>(CurrentChannel, ADCValue));                   
-
-                    }
-                    if (CurrentChannel == DI2008.EnabledAnalogChannels) //If all analog channels have been read, handle the digital readout then start over
-                    {
-                        ADCValues.Add(new Tuple<int, int>((DI2008.EnabledAnalogChannels), RawData[i + 1]));                            
-                    }
+                //Sequentially read the list until the digital byte is hit
+                while (CurrentChannel < DigitalChannelID && i < TimesToLoop)
+                {                    
+                    BytePair[0] = RawData[i];
+                    BytePair[1] = RawData[i + 1];
+                    short ADCValue = BitConverter.ToInt16(BytePair, 0);
+                    RawValues.Add(new Tuple<int, int>(CurrentChannel, ADCValue));
+                    i += 2;
+                    CurrentChannel++; 
                 }
 
-                CurrentChannel = CurrentChannel == DI2008.EnabledAnalogChannels  ? 0 : CurrentChannel + 1;
-
+                //Once all analog channels have been read, handle the digital readout then start over                
+                if (i < TimesToLoop)
+                {
+                    int DigitalStatus = RawData[i + 1];
+                    RawValues.Add(new Tuple<int, int>(DigitalChannelID, RawData[i + 1]));
+                    i += 2;
+                    CurrentChannel = 0;
+                }
             }
 
-            ADCValues = ADCValues.OrderBy(z => z.Item1).ToList();
-            return ADCValues;
+            var AveragedValues = new List<Tuple<int, decimal>>();
+
+            for (i = 0; i < DigitalChannelID; i++)
+            {
+                decimal AverageADCValue = (decimal)RawValues.Where(x => x.Item1 == i).Average(x => x.Item2);
+                AveragedValues.Add(new Tuple<int, decimal>(i, AverageADCValue));
+            }
+
+            AveragedValues.Add(new Tuple<int, decimal>(DigitalChannelID, RawValues.Where(x => x.Item1 == DigitalChannelID).First().Item2));
+
+            return AveragedValues;
         }
-        public static decimal ConvertADCtoVoltage(int ADC, ChannelConfiguration ChannelType)
+        public static decimal ConvertADCtoVoltage(decimal ADC, ChannelConfiguration ChannelType)
         {
             int MaxPossibleADC = 32767;
             decimal ChannelRange;
@@ -64,7 +71,7 @@ namespace DI2008Controller
 
             return Voltage;
         }
-        public static decimal ConvertADCtoCelsius(int ADC, ChannelConfiguration ThermocoupleType)
+        public static decimal ConvertADCtoCelsius(decimal ADC, ChannelConfiguration ThermocoupleType)
         {
             //Degrees Celsius = (m*V) + B 
             //V is the ADC value and m/B are constants relative to the thermocouple type
