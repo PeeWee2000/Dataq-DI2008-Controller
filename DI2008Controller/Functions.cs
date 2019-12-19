@@ -1,4 +1,5 @@
-﻿using LibUsbDotNet.Main;
+﻿using FastMember;
+using LibUsbDotNet.Main;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -73,7 +74,7 @@ namespace DI2008Controller
                     Command = (byte)(Command & BitPosition);
                     if (Command < 128)
                     { 
-                        Write("dout " + Command);
+                        Write($"dout {Command}");
                     }
                 }
             }
@@ -166,8 +167,9 @@ namespace DI2008Controller
         {
             decimal ActualValue = 0;
             var ChannelData = new Data();
-
             var Readings = new List<Data>();
+
+            var DataWriter = ObjectAccessor.Create(Data);
 
 
             for (int i = 0; i < DI2008.EnabledAnalogChannels; i++)
@@ -193,32 +195,18 @@ namespace DI2008Controller
                 ChannelData.ChannelConfiguration = ChannelType;
                 ChannelData.Value = ActualValue;
 
-                Readings.Add(ChannelData);
+                DataWriter[ChannelName] = ChannelData;
             }
-
-            while (Readings.Count < 8)
-            { Readings.Add(new Data()); }
-
-            Data.Analog0 = Readings[0];
-            Data.Analog1 = Readings[1];
-            Data.Analog2 = Readings[2];
-            Data.Analog3 = Readings[3];
-            Data.Analog4 = Readings[4];
-            Data.Analog5 = Readings[5];
-            Data.Analog6 = Readings[6];
-            Data.Analog7 = Readings[7];
 
             int DigitalStatusByte = Convert.ToInt32(ADCValues[DI2008.EnabledAnalogChannels].Item2);
             CurrentDigitalStates = DigitalStatusByte;
             var DigitalReadings = Calculations.GetDigitalChannelStates(DigitalStatusByte);
 
-            Data.Digital0 = DigitalReadings[0].Item2 == false ? DigtitalState.High : DigtitalState.Low;
-            Data.Digital1 = DigitalReadings[1].Item2 == false ? DigtitalState.High : DigtitalState.Low;
-            Data.Digital2 = DigitalReadings[2].Item2 == false ? DigtitalState.High : DigtitalState.Low;
-            Data.Digital3 = DigitalReadings[3].Item2 == false ? DigtitalState.High : DigtitalState.Low;
-            Data.Digital4 = DigitalReadings[4].Item2 == false ? DigtitalState.High : DigtitalState.Low;
-            Data.Digital5 = DigitalReadings[5].Item2 == false ? DigtitalState.High : DigtitalState.Low;
-            Data.Digital6 = DigitalReadings[6].Item2 == false ? DigtitalState.High : DigtitalState.Low;
+
+            for (int i = 0; i < DigitalReadings.Count; i++)
+            {
+                DataWriter["Digital" + i] = DigitalReadings[i].Item2 == false ? DigtitalState.High : DigtitalState.Low;
+            }
         }
     }
 }
