@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -6,8 +6,12 @@
     <Company />
     <Product>Dataq DI2008</Product>
     <Authors>Rider Harrison</Authors>
-    <PackageProjectUrl>https://github.com/PeeWee2000/Dataq-DI2008-Controller</PackageProjectUrl>
+    <PackageProjectUrl></PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Version>1.1.0</Version>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <RepositoryUrl>https://github.com/PeeWee2000/Dataq-DI2008-Controller</RepositoryUrl>
+    <Description>This library provides a simple way to connect to a Dataq DI-2008 and quickly start processing the data without writing a ton of code.</Description>
   </PropertyGroup>
 
   <ItemGroup>

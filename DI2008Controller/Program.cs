@@ -34,6 +34,30 @@ namespace DI2008Controller
 
             var Devices = UsbDevice.AllDevices;
             var Finder = new UsbDeviceFinder(Devices[0].Vid, Devices[0].Pid);
+
+
+            foreach (UsbRegistry Device in Devices)
+            {
+                var Finder = new UsbDeviceFinder(Devices[0].Vid, Devices[0].Pid);
+                DI_2008 = UsbDevice.OpenUsbDevice(Finder);
+
+                if (!DI_2008.IsOpen)
+                {
+                    DI_2008.Open();
+                }
+
+                InitalizeAndVerify();
+
+                DeviceInfo.Serial = InternalFunctions.Write("info 6");
+                DeviceInfo.FirmwareVersion = InternalFunctions.Write("info 2");
+                InternalFunctions.Write("ps 1");
+
+                DeviceInfo.PID = DI_2008.UsbRegistryInfo.Pid;
+                DeviceInfo.VID = DI_2008.UsbRegistryInfo.Vid;
+            }
+
+
+
             DI_2008 = UsbDevice.OpenUsbDevice(Finder);
 
             if (!DI_2008.IsOpen)
